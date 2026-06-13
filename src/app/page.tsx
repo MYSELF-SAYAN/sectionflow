@@ -7,6 +7,7 @@ import { CardStack } from '@/library/transitions/card-stack';
 import { CircularPortal } from '@/library/transitions/circular-portal';
 import { VerticalSplit } from '@/library/transitions/vertical-split';
 import { transitions, availableTransitions } from '@/library/registry';
+import { SiteFooter } from '@/components/site-footer';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -18,6 +19,7 @@ export default function Home() {
       <CardStack first={<FeaturePanel />} second={<CategoriesPanel />} />
       <CircularPortal first={<EnginePanel />} second={<StatsPanel />} />
       <VerticalSplit first={<QuotePanel />} second={<CtaPanel />} />
+      <SiteFooter />
     </div>
   );
 }

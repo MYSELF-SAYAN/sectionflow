@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { DocsShell } from '@/components/docs-shell';
+import { SiteFooter } from '@/components/site-footer';
 
 export const metadata = {
   title: {
@@ -10,5 +11,10 @@ export const metadata = {
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <DocsShell>{children}</DocsShell>;
+  return (
+    <>
+      <DocsShell>{children}</DocsShell>
+      <SiteFooter />
+    </>
+  );
 }
