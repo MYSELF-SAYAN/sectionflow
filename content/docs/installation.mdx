@@ -1,0 +1,58 @@
+---
+title: Installation
+description: Add SectionFlow transitions to your React or Next.js project in minutes.
+---
+
+## Quick start
+
+SectionFlow is designed to be copy-paste friendly. Install the animation runtime packages, then import any transition component and drop it into your page.
+
+### Install the core packages
+
+```bash
+npm install framer-motion
+```
+
+If you want GSAP-powered transitions as well, add:
+
+```bash
+npm install gsap
+```
+
+### Peer dependencies
+
+For a polished setup, make sure your app already includes:
+
+- React 19+
+- Next.js 15+
+- Tailwind CSS v4 (optional but recommended)
+
+### Basic usage
+
+```tsx
+import { CardStack } from '@/library/transitions/card-stack';
+
+export default function LandingPage() {
+  return (
+    <main>
+      <CardStack
+        first={<section className="h-full w-full bg-zinc-950" />}
+        second={<section className="h-full w-full bg-violet-700" />}
+      />
+    </main>
+  );
+}
+```
+
+### Minimal setup notes
+
+- Each transition accepts `first`, `second`, and an optional `height` prop.
+- Sections should fill the viewport with `h-full w-full`.
+- Use the transition as a full-screen scroll experience or embed it inside a larger page layout.
+
+## Recommended workflow
+
+1. Pick a transition from the gallery.
+2. Copy the component file from the library.
+3. Add your own content into the `first` and `second` slots.
+4. Fine-tune the scroll height for pacing and motion feel.

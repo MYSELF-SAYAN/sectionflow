@@ -1,0 +1,43 @@
+---
+title: Getting Started
+description: Scroll-driven section transitions for modern React websites.
+---
+
+SectionFlow is a library of **scroll-driven section transitions**. Every transition pins a full-screen viewport inside a tall scroll track and choreographs the handoff between two sections as you scroll – the same pattern used by premium sites like Apple, Linear and the GSAP showcase.
+
+## Quick start
+
+Every transition takes a `first` (outgoing) and `second` (incoming) section:
+
+```tsx
+import { CardStack } from '@/library/transitions/card-stack';
+
+export default function Page() {
+  return (
+    <main>
+      <CardStack
+        first={<section className="h-full bg-zinc-950">Section A</section>}
+        second={<section className="h-full bg-violet-700">Section B</section>}
+      />
+    </main>
+  );
+}
+```
+
+Sections should fill their container (`h-full w-full`). The track renders `300vh` of scroll distance by default – tune it with the `height` prop.
+
+## How it works
+
+All Framer Motion transitions are built on a shared core, `TransitionTrack`:
+
+- A tall scroll region (`height` in vh) with a `sticky` full-screen viewport.
+- `useScroll` + `useSpring` produce a smooth 0→1 progress value.
+- Each transition maps that progress to transforms, clip-paths and masks with `useTransform`.
+
+GSAP transitions use `ScrollTrigger` with `scrub` for complex staggered timelines.
+
+## Principles
+
+- **60 FPS** – only compositor-friendly properties (transform, opacity, clip-path, mask).
+- **SSR compatible** – transitions are client components; your sections stay server-rendered children.
+- **Consistent API** – every transition shares the same `first` / `second` / `height` props.

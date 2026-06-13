@@ -1,0 +1,42 @@
+---
+title: API Reference
+description: The shared props and core primitives of SectionFlow.
+---
+
+## SectionTransitionProps
+
+Every transition component accepts:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `first` | `ReactNode` | required | The outgoing section. Fills the screen when the track starts. |
+| `second` | `ReactNode` | required | The incoming section. Fills the screen when the track ends. |
+| `height` | `number` | `300` | Scroll track height in vh. Longer = slower transition. |
+| `className` | `string` | – | Extra classes for the track wrapper. |
+
+## TransitionTrack
+
+The shared sticky-track primitive for building your own transitions:
+
+```tsx
+import { TransitionTrack, useTrackProgress } from '@/library/core/transition-track';
+import { motion, useTransform } from 'framer-motion';
+
+function MyInner() {
+  const progress = useTrackProgress(); // spring-smoothed MotionValue 0→1
+  const opacity = useTransform(progress, [0, 1], [0, 1]);
+  return <motion.div style={{ opacity }} className="absolute inset-0" />;
+}
+
+export function MyTransition() {
+  return (
+    <TransitionTrack height={300}>
+      <MyInner />
+    </TransitionTrack>
+  );
+}
+```
+
+## GSAP transitions
+
+GSAP transitions register `ScrollTrigger` and build a scrubbed timeline inside `useLayoutEffect`, cleaning up with `gsap.context(...).revert()`. They expose the same `first` / `second` / `height` props.
