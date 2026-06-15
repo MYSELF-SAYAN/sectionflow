@@ -5,21 +5,15 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 export interface ElasticCurtainProps extends SectionTransitionProps {
-  /** Color class for the elastic cap – should match the second section's background. */
   capClassName?: string;
 }
 
 function Inner({ first, second, capClassName }: Omit<ElasticCurtainProps, 'height' | 'className'>) {
-  const p = useTrackProgress();
-  const v = useVelocity(p);
-  // The cap stretches with scroll velocity, then springs back – the elastic feel.
-  const stretch = useSpring(useTransform(v, [-2.5, 0, 2.5], [2.2, 1, 2.2]), {
-    stiffness: 320,
-    damping: 22,
-  });
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const y = useTransform(p, [0.30, 0.96], ['102%', '0%']);
-  const dim = useTransform(p, [0.30, 0.92], [1, 0.45]);
+  const p       = useTrackProgress();
+  const v       = useVelocity(p);
+  const stretch = useSpring(useTransform(v, [-2.5, 0, 2.5], [2.2, 1, 2.2]), { stiffness: 320, damping: 22 });
+  const y       = useTransform(p, [0.25, 0.75], ['102%', '0%']);
+  const dim     = useTransform(p, [0.25, 0.75], [1, 0.45]);
 
   return (
     <>
@@ -39,7 +33,6 @@ function Inner({ first, second, capClassName }: Omit<ElasticCurtainProps, 'heigh
   );
 }
 
-/** ElasticCurtain – a curtain with a velocity-reactive elastic edge rises into place. */
 export function ElasticCurtain({ first, second, height, className, capClassName }: ElasticCurtainProps) {
   return (
     <TransitionTrack height={height} className={className}>

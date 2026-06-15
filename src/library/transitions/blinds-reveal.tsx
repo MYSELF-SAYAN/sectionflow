@@ -5,12 +5,11 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const s = useTransform(p, [0.30, 0.94], [0, 12.6]);
+  const p    = useTrackProgress();
+  const s    = useTransform(p, [0.25, 0.75], [0, 12.6]);
   const mask = useMotionTemplate`repeating-linear-gradient(90deg, #000 0%, #000 ${s}%, transparent ${s}%, transparent 12.5%)`;
-  const dim = useTransform(p, [0.30, 0.88], [1, 0.4]);
-  const drift = useTransform(p, [0.30, 0.94], ['2%', '0%']);
+  const dim  = useTransform(p, [0.25, 0.72], [1, 0.4]);
+  const drift = useTransform(p, [0.25, 0.75], ['2%', '0%']);
 
   return (
     <>
@@ -22,7 +21,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** BlindsReveal – vertical blinds open strip by strip to expose the next section. */
 export function BlindsReveal({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

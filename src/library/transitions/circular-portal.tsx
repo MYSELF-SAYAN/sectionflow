@@ -6,11 +6,11 @@ import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
   const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const r = useTransform(p, [0.30, 0.95], [0, 150]);
-  const clipPath = useMotionTemplate`circle(${r}% at 50% 50%)`;
-  const firstScale = useTransform(p, [0.30, 0.95], [1, 1.18]);
-  const innerScale = useTransform(p, [0.30, 0.95], [1.15, 1]);
+  // 0.00–0.25 safe zone · 0.25–0.75 buildup · 0.75–1.00 handoff
+  const r          = useTransform(p, [0.25, 0.75], [0, 150]);
+  const clipPath   = useMotionTemplate`circle(${r}% at 50% 50%)`;
+  const firstScale = useTransform(p, [0.25, 0.75], [1, 1.18]);
+  const innerScale = useTransform(p, [0.25, 0.75], [1.15, 1]);
 
   return (
     <>
@@ -22,7 +22,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** CircularPortal – the next section blooms out of a circular portal in the center. */
 export function CircularPortal({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

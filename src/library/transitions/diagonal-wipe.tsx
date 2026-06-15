@@ -5,14 +5,13 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const xTop = useTransform(p, [0.30, 0.95], [0, 135]);
-  const xBottom = useTransform(xTop, (v) => v - 30);
+  const p        = useTrackProgress();
+  const xTop     = useTransform(p, [0.25, 0.75], [0, 135]);
+  const xBottom  = useTransform(xTop, (v) => v - 30);
   const clipPath = useMotionTemplate`polygon(0% 0%, ${xTop}% 0%, ${xBottom}% 100%, 0% 100%)`;
-  const firstX = useTransform(p, [0.30, 0.95], ['0%', '12%']);
-  const seamX = useMotionTemplate`${xBottom}%`;
-  const seamOpacity = useTransform(p, [0.30, 0.38, 0.88, 0.96], [0, 1, 1, 0]);
+  const firstX   = useTransform(p, [0.25, 0.75], ['0%', '12%']);
+  const seamX    = useMotionTemplate`${xBottom}%`;
+  const seamOpacity = useTransform(p, [0.25, 0.33, 0.72, 0.78], [0, 1, 1, 0]);
 
   return (
     <>
@@ -26,7 +25,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** DiagonalWipe – a slanted mask wipes across the viewport with a glowing angled seam. */
 export function DiagonalWipe({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

@@ -55,6 +55,10 @@ import { SvgShapeMorph } from '@/library/transitions/svg-shape-morph';
 import { PrismRefraction } from '@/library/transitions/prism-refraction';
 import { VolumetricLight } from '@/library/transitions/volumetric-light';
 
+import { StarfieldWarp } from '@/library/transitions/starfield-warp';
+import { PixelMelt } from '@/library/transitions/pixel-melt';
+import { PageBurn } from '@/library/transitions/page-burn';
+
 const components: Record<string, ComponentType<SectionTransitionProps>> = {
   'wave-reveal': WaveReveal,
   'circular-portal': CircularPortal,
@@ -107,6 +111,9 @@ const components: Record<string, ComponentType<SectionTransitionProps>> = {
   'svg-shape-morph': SvgShapeMorph,
   'prism-refraction': PrismRefraction,
   'volumetric-light': VolumetricLight,
+  'starfield-warp': StarfieldWarp,
+  'pixel-melt': PixelMelt,
+  'page-burn': PageBurn,
 };
 
 export function TemplateDemo({ slug, name }: { slug: string; name: string }) {

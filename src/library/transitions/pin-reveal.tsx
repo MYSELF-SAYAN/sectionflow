@@ -5,11 +5,10 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const dim = useTransform(p, [0.30, 0.90], [1, 0.5]);
+  const p      = useTrackProgress();
+  const dim    = useTransform(p, [0.25, 0.75], [1, 0.5]);
   const filter = useMotionTemplate`brightness(${dim})`;
-  const y = useTransform(p, [0.30, 0.96], ['100%', '0%']);
+  const y      = useTransform(p, [0.25, 0.80], ['100%', '0%']);
 
   return (
     <>
@@ -21,7 +20,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** PinReveal – the current section pins in place while the next slides over it. */
 export function PinReveal({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

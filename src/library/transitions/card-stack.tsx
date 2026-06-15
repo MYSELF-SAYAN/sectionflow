@@ -5,14 +5,13 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const scale = useTransform(p, [0.30, 0.84], [1, 0.88]);
-  const radius = useTransform(p, [0.30, 0.84], [0, 36]);
-  const dim = useTransform(p, [0.30, 0.84], [1, 0.45]);
-  const filter = useMotionTemplate`brightness(${dim})`;
-  const y = useTransform(p, [0.38, 0.97], ['102%', '0%']);
-  const radius2 = useTransform(p, [0.38, 0.97], [44, 0]);
+  const p       = useTrackProgress();
+  const scale   = useTransform(p, [0.25, 0.72], [1, 0.88]);
+  const radius  = useTransform(p, [0.25, 0.72], [0, 36]);
+  const dim     = useTransform(p, [0.25, 0.72], [1, 0.45]);
+  const filter  = useMotionTemplate`brightness(${dim})`;
+  const y       = useTransform(p, [0.30, 0.80], ['102%', '0%']);
+  const radius2 = useTransform(p, [0.30, 0.80], [44, 0]);
 
   return (
     <>
@@ -29,7 +28,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** CardStack – the current section settles back like a card while the next slides over it. */
 export function CardStack({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

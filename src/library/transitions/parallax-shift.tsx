@@ -5,11 +5,10 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const y1 = useTransform(p, [0.30, 1.00], ['0%', '-30%']);
-  const dim = useTransform(p, [0.30, 1.00], [1, 0.3]);
-  const y2 = useTransform(p, [0.30, 0.96], ['100%', '0%']);
+  const p   = useTrackProgress();
+  const y1  = useTransform(p, [0.25, 0.85], ['0%', '-30%']);
+  const dim = useTransform(p, [0.25, 0.85], [1, 0.3]);
+  const y2  = useTransform(p, [0.25, 0.80], ['100%', '0%']);
 
   return (
     <>
@@ -21,7 +20,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** ParallaxShift – sections cross at different scroll speeds for a deep parallax feel. */
 export function ParallaxShift({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

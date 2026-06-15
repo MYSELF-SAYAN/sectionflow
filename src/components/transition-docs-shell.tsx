@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, Check, Copy, Expand, Layers3, MonitorPlay, Sparkles, WandSparkles } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Copy, Expand, Layers3, MonitorPlay, Sparkles, WandSparkles } from 'lucide-react';
 import type { TransitionMeta } from '@/library/registry';
+import type { CoreFile } from '@/lib/transition-docs';
 
 // ---------------------------------------------------------------------------
-// Tiny tooltip — pure CSS-free, position above the trigger element
+// Tooltip
 // ---------------------------------------------------------------------------
 function Tooltip({ label, children }: { label: string; children: ReactNode }) {
   const [visible, setVisible] = useState(false);
@@ -24,7 +25,6 @@ function Tooltip({ label, children }: { label: string; children: ReactNode }) {
           role="tooltip"
           className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[11px] font-medium tracking-wide text-zinc-200 shadow-xl"
         >
-          {/* Arrow pointing up */}
           <span className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-zinc-700" />
           {label}
         </span>
@@ -34,11 +34,79 @@ function Tooltip({ label, children }: { label: string; children: ReactNode }) {
 }
 
 // ---------------------------------------------------------------------------
-// Build a rich AI prompt that includes the full component source code
+// Single collapsible file block inside the Code tab
 // ---------------------------------------------------------------------------
-function buildAiPrompt(transition: TransitionMeta, sourceCode: string): string {
+function FileBlock({
+  filename,
+  html,
+  source,
+  defaultOpen = false,
+  badge,
+}: {
+  filename: string;
+  html: string;
+  source: string;
+  defaultOpen?: boolean;
+  badge?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    await navigator.clipboard.writeText(source);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <div className="border-b border-zinc-800 last:border-b-0">
+      {/* File header — always visible, click to expand/collapse */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex flex-1 items-center gap-2.5 text-left"
+        >
+          {open
+            ? <ChevronUp className="size-3.5 shrink-0 text-zinc-500" />
+            : <ChevronDown className="size-3.5 shrink-0 text-zinc-500" />}
+          <span className="rounded border border-zinc-700 bg-zinc-800/70 px-2 py-0.5 font-mono text-[11px] text-zinc-300">
+            {filename}
+          </span>
+          {badge && (
+            <span className="rounded-full border border-zinc-700 bg-zinc-800/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              {badge}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={copy}
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
+        >
+          {copied
+            ? <><Check className="size-3 text-emerald-400" /> Copied</>
+            : <><Copy className="size-3" /> Copy</>}
+        </button>
+      </div>
+
+      {/* Collapsible code body */}
+      {open && (
+        <div
+          className="shiki-wrapper max-h-[60vh] overflow-auto border-t border-zinc-800/60 px-4 py-3 text-sm leading-6 [&>pre]:bg-transparent! [&>pre]:m-0! [&>pre]:p-0! [&_code]:font-mono! [&_code]:text-sm! [&_code]:leading-6!"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: server-rendered by Shiki, safe
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AI prompt builder
+// ---------------------------------------------------------------------------
+function buildAiPrompt(transition: TransitionMeta, sourceCode: string, usageCode: string): string {
   const engine = transition.engine === 'gsap' ? 'GSAP (with ScrollTrigger)' : 'Framer Motion';
-  const category = transition.category;
 
   return `# Implement the "${transition.name}" scroll-driven section transition
 
@@ -52,33 +120,34 @@ ${transition.description}
 - Language: TypeScript
 
 ## How it works
-The transition uses a sticky scroll track (\`TransitionTrack\`) that creates a tall scrollable region (default 300 vh). A spring-smoothed progress value (0 → 1) drives every animation. The component receives two props — \`first\` (outgoing section) and \`second\` (incoming section) — both typed as \`ReactNode\`.
+The transition uses a sticky scroll track (TransitionTrack) that creates a tall scrollable region (default 300 vh). A spring-smoothed progress value (0 → 1) drives every animation. The component receives two props — first (outgoing section) and second (incoming section) — both typed as ReactNode.
 
-Key rule: the first 30% of scroll progress is a **dead zone** where both sections are fully visible and readable. Animations only begin after the user has scrolled through ~30% of the track, creating a clear separation between "content reading" and "transition" phases.
+Key rule: the first 30% of scroll progress is a dead zone where sections are fully visible and readable. Animations only begin after the user has scrolled through ~30% of the track.
 
-## Component source code
-Copy this file to \`src/library/transitions/${transition.slug}.tsx\` in your project:
+## File 1 — Transition component
+Path: src/library/transitions/${transition.slug}.tsx
 
 \`\`\`tsx
 ${sourceCode}
 \`\`\`
 
-## Required core files
-You also need these two files from the SectionFlow library:
+## File 2 — Core types
+Path: src/library/core/types.ts
 
-### \`src/library/core/types.ts\`
 \`\`\`ts
 import type { ReactNode } from 'react';
 
 export interface SectionTransitionProps {
   first: ReactNode;
   second: ReactNode;
-  height?: number;   // scroll track height in vh, default 300
+  height?: number;
   className?: string;
 }
 \`\`\`
 
-### \`src/library/core/transition-track.tsx\`
+## File 3 — Scroll track
+Path: src/library/core/transition-track.tsx
+
 \`\`\`tsx
 'use client';
 import { createContext, useContext, useRef, type ReactNode } from 'react';
@@ -106,54 +175,22 @@ export function TransitionTrack({ children, height = 300, className }: { childre
 }
 \`\`\`
 
-## Usage example
+## File 4 — Full page usage example
 \`\`\`tsx
-import { ${toPascalCase(transition.slug)} } from '@/library/transitions/${transition.slug}';
-
-export default function MyPage() {
-  return (
-    <main>
-      {/* Your first section */}
-      <section className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
-        <h1 className="text-5xl font-bold">Section One</h1>
-      </section>
-
-      {/* The transition — wraps both sections */}
-      <${toPascalCase(transition.slug)}
-        height={300}
-        first={
-          <section className="h-full w-full bg-zinc-950 flex items-center justify-center text-white">
-            <h2 className="text-4xl font-semibold">Outgoing section</h2>
-          </section>
-        }
-        second={
-          <section className="h-full w-full bg-zinc-900 flex items-center justify-center text-white">
-            <h2 className="text-4xl font-semibold">Incoming section</h2>
-          </section>
-        }
-      />
-
-      {/* Your second section */}
-      <section className="min-h-screen bg-zinc-900 flex items-center justify-center text-white">
-        <h1 className="text-5xl font-bold">Section Two</h1>
-      </section>
-    </main>
-  );
-}
+${usageCode}
 \`\`\`
 
-## Instructions for AI
-1. Copy the component source code exactly as shown above — do not modify the animation logic.
-2. Install dependencies: \`${transition.engine === 'gsap' ? 'gsap' : 'framer-motion'}\`
-3. Create the two core files (\`types.ts\` and \`transition-track.tsx\`) if they don't exist.
-4. Replace the placeholder section content in the usage example with the actual page sections you want to transition between.
-5. The \`height\` prop controls transition speed — increase it (e.g. 400) for a slower, more cinematic feel.
-6. Both \`first\` and \`second\` props must render full-screen (\`h-full w-full\`) sections that fill their container.
+## Instructions
+1. Create all four files in your project.
+2. Install: npm install ${transition.engine === 'gsap' ? 'gsap framer-motion' : 'framer-motion'}
+3. Replace section content in the usage example with your real page sections.
+4. The height prop controls transition speed — increase to 400+ for a more cinematic feel.
+5. Both first and second props must render full-screen (h-full w-full) content.
 `;
 }
 
 function toPascalCase(slug: string): string {
-  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+  return slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('');
 }
 
 // ---------------------------------------------------------------------------
@@ -163,16 +200,22 @@ export function TransitionDocsShell({
   transition,
   sourceCode,
   sourceHtml,
+  coreFiles,
+  usageCode,
+  usageHtml,
   relatedTransitions,
 }: {
   transition: TransitionMeta;
   sourceCode: string;
   sourceHtml: string;
+  coreFiles: CoreFile[];
+  usageCode: string;
+  usageHtml: string;
   relatedTransitions: TransitionMeta[];
 }) {
   const [activeTab, setActiveTab] = useState<'demo' | 'code'>('demo');
-  const [copiedCode, setCopiedCode] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   const useCases = [
     { label: 'Landing pages', description: 'Hero-led storytelling', icon: MonitorPlay },
@@ -180,33 +223,50 @@ export function TransitionDocsShell({
     { label: 'Editorial UI', description: 'Cinematic motion language', icon: WandSparkles },
   ];
 
-  // Full AI prompt includes component source code
   const aiPrompt = useMemo(
-    () => buildAiPrompt(transition, sourceCode),
-    [transition, sourceCode],
+    () => buildAiPrompt(transition, sourceCode, usageCode),
+    [transition, sourceCode, usageCode],
   );
 
-  async function copyToClipboard(text: string, type: 'code' | 'prompt') {
+  // "Copy all" concatenates every file for easy one-shot pasting
+  const allCode = useMemo(
+    () => [
+      `// ── ${transition.slug}.tsx ──────────────────────────────`,
+      sourceCode,
+      '',
+      `// ── src/library/core/types.ts ───────────────────────────`,
+      ...coreFiles.filter((f) => f.filename.includes('types')).map((f) => f.source),
+      '',
+      `// ── src/library/core/transition-track.tsx ───────────────`,
+      ...coreFiles.filter((f) => f.filename.includes('track')).map((f) => f.source),
+      '',
+      `// ── Usage example (page.tsx) ────────────────────────────`,
+      usageCode,
+    ].join('\n'),
+    [transition.slug, sourceCode, coreFiles, usageCode],
+  );
+
+  async function copyToClipboard(text: string, type: 'prompt' | 'all') {
     if (typeof navigator === 'undefined') return;
     await navigator.clipboard.writeText(text);
-    if (type === 'code') {
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 1600);
-    } else {
+    if (type === 'prompt') {
       setCopiedPrompt(true);
       setTimeout(() => setCopiedPrompt(false), 1600);
+    } else {
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 1600);
     }
   }
 
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[40px] border border-zinc-800/80 bg-[#06080c] p-2.5 sm:p-3 lg:p-4">
+        {/* Header card */}
         <div className="rounded-[30px] border border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 sm:p-5 lg:p-6">
           <div className="max-w-3xl">
             <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{transition.name}</h1>
             <p className="mt-2 text-sm leading-7 text-zinc-400 sm:text-base">{transition.description}</p>
           </div>
-
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             {useCases.map((item) => {
               const Icon = item.icon;
@@ -227,13 +287,13 @@ export function TransitionDocsShell({
         <div className="mt-4 overflow-hidden rounded-[30px] border border-zinc-800 bg-zinc-950 shadow-[0_0_80px_rgba(34,211,238,0.12)]">
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-3 text-[11px] uppercase tracking-[0.32em] text-zinc-500">
-            {/* Left: status indicator */}
+            {/* Status */}
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
               <span>Preview canvas</span>
             </div>
 
-            {/* Centre: tab switcher */}
+            {/* Tab switcher */}
             <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/70 p-1">
               <button
                 type="button"
@@ -251,7 +311,7 @@ export function TransitionDocsShell({
               </button>
             </div>
 
-            {/* Right: action icon buttons with tooltips */}
+            {/* Action icons */}
             <div className="flex items-center gap-2">
               <Tooltip label={copiedPrompt ? 'Copied!' : 'Copy AI prompt'}>
                 <button
@@ -263,18 +323,16 @@ export function TransitionDocsShell({
                   {copiedPrompt ? <Check className="size-4 text-emerald-400" /> : <Sparkles className="size-4" />}
                 </button>
               </Tooltip>
-
-              <Tooltip label={copiedCode ? 'Copied!' : 'Copy source code'}>
+              <Tooltip label={copiedAll ? 'Copied!' : 'Copy all files'}>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(sourceCode, 'code')}
+                  onClick={() => copyToClipboard(allCode, 'all')}
                   className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                  aria-label="Copy source code"
+                  aria-label="Copy all source files"
                 >
-                  {copiedCode ? <Check className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
+                  {copiedAll ? <Check className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
                 </button>
               </Tooltip>
-
               <Tooltip label="Full-screen demo">
                 <Link
                   href={`/demo/${transition.slug}`}
@@ -287,41 +345,73 @@ export function TransitionDocsShell({
             </div>
           </div>
 
-          {/* Content area */}
-          {activeTab === 'demo' ? (
+          {/* ── PREVIEW TAB ── */}
+          {activeTab === 'demo' && (
             <iframe
               src={`/demo/${transition.slug}`}
               title={`${transition.name} demo`}
               className="min-h-140 h-[76vh] w-full"
             />
-          ) : (
-            <div className="overflow-hidden bg-[#0d1117]">
-              {/* Code panel header */}
+          )}
+
+          {/* ── CODE TAB — all files stacked ── */}
+          {activeTab === 'code' && (
+            <div className="bg-[#0d1117]">
+              {/* Top bar with file count + copy-all */}
               <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="rounded border border-zinc-700 bg-zinc-800/60 px-2 py-0.5 font-mono text-[11px] text-zinc-400">
-                    {transition.slug}.tsx
-                  </span>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-zinc-600">TypeScript / React</span>
+                  <span className="font-medium text-zinc-400">4 files</span>
+                  <span className="text-zinc-700">·</span>
+                  <span>Click any filename to expand</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(sourceCode, 'code')}
+                  onClick={() => copyToClipboard(allCode, 'all')}
                   className="flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
                 >
-                  {copiedCode ? (
-                    <><Check className="size-3 text-emerald-400" /> Copied</>
-                  ) : (
-                    <><Copy className="size-3" /> Copy</>
-                  )}
+                  {copiedAll
+                    ? <><Check className="size-3 text-emerald-400" /> Copied all</>
+                    : <><Copy className="size-3" /> Copy all files</>}
                 </button>
               </div>
-              {/* Shiki-highlighted code — server-rendered HTML */}
-              <div
-                className="shiki-wrapper max-h-[70vh] overflow-auto p-4 text-sm leading-6 [&>pre]:bg-transparent! [&>pre]:m-0! [&>pre]:p-0! [&_code]:font-mono! [&_code]:text-sm! [&_code]:leading-6!"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: server-rendered by Shiki, safe
-                dangerouslySetInnerHTML={{ __html: sourceHtml }}
+
+              {/* File 1 — transition component (open by default) */}
+              <FileBlock
+                filename={`src/library/transitions/${transition.slug}.tsx`}
+                html={sourceHtml}
+                source={sourceCode}
+                defaultOpen
+                badge="transition"
+              />
+
+              {/* File 2 — types.ts */}
+              {coreFiles.filter((f) => f.filename.includes('types')).map((f) => (
+                <FileBlock
+                  key={f.filename}
+                  filename={f.filename}
+                  html={f.html}
+                  source={f.source}
+                  badge="core"
+                />
+              ))}
+
+              {/* File 3 — transition-track.tsx */}
+              {coreFiles.filter((f) => f.filename.includes('track')).map((f) => (
+                <FileBlock
+                  key={f.filename}
+                  filename={f.filename}
+                  html={f.html}
+                  source={f.source}
+                  badge="core"
+                />
+              ))}
+
+              {/* File 4 — usage example */}
+              <FileBlock
+                filename="page.tsx (usage example)"
+                html={usageHtml}
+                source={usageCode}
+                badge="usage"
               />
             </div>
           )}
@@ -353,7 +443,7 @@ export function TransitionDocsShell({
               <h2 className="text-lg font-semibold">AI prompt</h2>
             </div>
             <p className="mt-3 text-xs leading-6 text-zinc-500">
-              Copies a complete prompt with the full component source, core files, and usage example — ready to paste into any AI assistant.
+              Copies a complete prompt with all 4 files — transition component, core files, and full usage example — ready to paste into any AI assistant.
             </p>
             <button
               type="button"

@@ -5,13 +5,12 @@ import { TransitionTrack, useTrackProgress } from '../core/transition-track';
 import type { SectionTransitionProps } from '../core/types';
 
 function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress();
-  // Dead zone: 0→0.30 — first section fully visible, no animation
-  const edge = useTransform(p, [0.30, 0.96], [104, -4]);
+  const p        = useTrackProgress();
+  const edge     = useTransform(p, [0.25, 0.75], [104, -4]);
   const clipPath = useMotionTemplate`inset(${edge}% 0% 0% 0%)`;
-  const lineTop = useMotionTemplate`${edge}%`;
-  const glow = useTransform(p, [0.30, 0.38, 0.88, 0.96], [0, 1, 1, 0]);
-  const dim = useTransform(p, [0.30, 0.92], [1, 0.45]);
+  const lineTop  = useMotionTemplate`${edge}%`;
+  const glow     = useTransform(p, [0.25, 0.33, 0.70, 0.78], [0, 1, 1, 0]);
+  const dim      = useTransform(p, [0.25, 0.75], [1, 0.45]);
 
   return (
     <>
@@ -25,7 +24,6 @@ function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second
   );
 }
 
-/** GradientBurn – a glowing burn line travels up the screen, igniting the next section. */
 export function GradientBurn({ first, second, height, className }: SectionTransitionProps) {
   return (
     <TransitionTrack height={height} className={className}>

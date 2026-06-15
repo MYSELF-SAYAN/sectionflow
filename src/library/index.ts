@@ -53,3 +53,6 @@ export { LensDistortion } from './transitions/lens-distortion';
 export { SvgShapeMorph } from './transitions/svg-shape-morph';
 export { PrismRefraction } from './transitions/prism-refraction';
 export { VolumetricLight } from './transitions/volumetric-light';
+export { StarfieldWarp } from './transitions/starfield-warp';
+export { PixelMelt } from './transitions/pixel-melt';
+export { PageBurn } from './transitions/page-burn';
