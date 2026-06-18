@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
-import { ArrowRight, Check, ChevronDown, ChevronUp, Copy, Expand, Layers3, MonitorPlay, Sparkles, WandSparkles } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Copy, Expand, Layers3, MonitorPlay, Sparkles, Terminal, WandSparkles } from 'lucide-react';
 import type { TransitionMeta } from '@/library/registry';
 import type { CoreFile } from '@/lib/transition-docs';
 
@@ -21,10 +21,7 @@ function Tooltip({ label, children }: { label: string; children: ReactNode }) {
     >
       {children}
       {visible && (
-        <span
-          role="tooltip"
-          className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[11px] font-medium tracking-wide text-zinc-200 shadow-xl"
-        >
+        <span role="tooltip" className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-[11px] font-medium tracking-wide text-zinc-200 shadow-xl">
           <span className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-zinc-700" />
           {label}
         </span>
@@ -34,20 +31,69 @@ function Tooltip({ label, children }: { label: string; children: ReactNode }) {
 }
 
 // ---------------------------------------------------------------------------
-// Single collapsible file block inside the Code tab
+// Installation command block — package manager switcher
 // ---------------------------------------------------------------------------
-function FileBlock({
-  filename,
-  html,
-  source,
-  defaultOpen = false,
-  badge,
-}: {
-  filename: string;
-  html: string;
-  source: string;
-  defaultOpen?: boolean;
-  badge?: string;
+type PackageManager = 'npx' | 'pnpm' | 'yarn' | 'bun';
+
+const PM_LABELS: Record<PackageManager, string> = { npx: 'npx', pnpm: 'pnpm dlx', yarn: 'yarn dlx', bun: 'bunx' };
+
+function InstallBlock({ slug }: { slug: string }) {
+  const [pm, setPm] = useState<PackageManager>('npx');
+  const [copied, setCopied] = useState(false);
+
+  const command = `${PM_LABELS[pm]} sectionflow-cli add ${slug}`;
+
+  async function copy() {
+    await navigator.clipboard.writeText(command);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <div className="border-b border-zinc-800 bg-[#0a0d13]">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <Terminal className="size-3.5 text-cyan-400 shrink-0" />
+          <span className="font-medium text-zinc-300">Install via CLI</span>
+        </div>
+        {/* PM switcher */}
+        <div className="flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/50 p-0.5">
+          {(Object.keys(PM_LABELS) as PackageManager[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPm(key)}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide transition ${pm === key ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Command line */}
+      <div className="flex items-center gap-2 border-t border-zinc-800/60 bg-[#07090f] px-4 py-3">
+        <span className="select-none text-zinc-600 text-sm font-mono">$</span>
+        <code className="flex-1 font-mono text-sm text-cyan-300">{command}</code>
+        <button
+          type="button"
+          onClick={copy}
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
+        >
+          {copied
+            ? <><Check className="size-3 text-emerald-400" /> Copied</>
+            : <><Copy className="size-3" /> Copy</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Collapsible file block
+// ---------------------------------------------------------------------------
+function FileBlock({ filename, html, source, defaultOpen = false, badge }: {
+  filename: string; html: string; source: string; defaultOpen?: boolean; badge?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [copied, setCopied] = useState(false);
@@ -60,37 +106,16 @@ function FileBlock({
 
   return (
     <div className="border-b border-zinc-800 last:border-b-0">
-      {/* File header — always visible, click to expand/collapse */}
       <div className="flex items-center justify-between gap-3 px-4 py-3">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex flex-1 items-center gap-2.5 text-left"
-        >
-          {open
-            ? <ChevronUp className="size-3.5 shrink-0 text-zinc-500" />
-            : <ChevronDown className="size-3.5 shrink-0 text-zinc-500" />}
-          <span className="rounded border border-zinc-700 bg-zinc-800/70 px-2 py-0.5 font-mono text-[11px] text-zinc-300">
-            {filename}
-          </span>
-          {badge && (
-            <span className="rounded-full border border-zinc-700 bg-zinc-800/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-              {badge}
-            </span>
-          )}
+        <button type="button" onClick={() => setOpen((o) => !o)} className="flex flex-1 items-center gap-2.5 text-left">
+          {open ? <ChevronUp className="size-3.5 shrink-0 text-zinc-500" /> : <ChevronDown className="size-3.5 shrink-0 text-zinc-500" />}
+          <span className="rounded border border-zinc-700 bg-zinc-800/70 px-2 py-0.5 font-mono text-[11px] text-zinc-300">{filename}</span>
+          {badge && <span className="rounded-full border border-zinc-700 bg-zinc-800/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-zinc-500">{badge}</span>}
         </button>
-        <button
-          type="button"
-          onClick={copy}
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
-        >
-          {copied
-            ? <><Check className="size-3 text-emerald-400" /> Copied</>
-            : <><Copy className="size-3" /> Copy</>}
+        <button type="button" onClick={copy} className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white">
+          {copied ? <><Check className="size-3 text-emerald-400" /> Copied</> : <><Copy className="size-3" /> Copy</>}
         </button>
       </div>
-
-      {/* Collapsible code body */}
       {open && (
         <div
           className="shiki-wrapper max-h-[60vh] overflow-auto border-t border-zinc-800/60 px-4 py-3 text-sm leading-6 [&>pre]:bg-transparent! [&>pre]:m-0! [&>pre]:p-0! [&_code]:font-mono! [&_code]:text-sm! [&_code]:leading-6!"
@@ -107,7 +132,6 @@ function FileBlock({
 // ---------------------------------------------------------------------------
 function buildAiPrompt(transition: TransitionMeta, sourceCode: string, usageCode: string): string {
   const engine = transition.engine === 'gsap' ? 'GSAP (with ScrollTrigger)' : 'Framer Motion';
-
   return `# Implement the "${transition.name}" scroll-driven section transition
 
 ## What this transition does
@@ -119,24 +143,20 @@ ${transition.description}
 - Styling: Tailwind CSS v4
 - Language: TypeScript
 
+## CLI Installation
+npx sectionflow-cli add ${transition.slug}
+
 ## How it works
-The transition uses a sticky scroll track (TransitionTrack) that creates a tall scrollable region (default 300 vh). A spring-smoothed progress value (0 → 1) drives every animation. The component receives two props — first (outgoing section) and second (incoming section) — both typed as ReactNode.
+The transition uses a sticky scroll track (TransitionTrack) that creates a tall scrollable region (default 300 vh). A spring-smoothed progress value (0→1) drives every animation. Dead zone: 0%–25% is content reading time — no animation fires until 25% scroll.
 
-Key rule: the first 30% of scroll progress is a dead zone where sections are fully visible and readable. Animations only begin after the user has scrolled through ~30% of the track.
-
-## File 1 — Transition component
-Path: src/library/transitions/${transition.slug}.tsx
-
+## File 1 — Transition component (src/library/transitions/${transition.slug}.tsx)
 \`\`\`tsx
 ${sourceCode}
 \`\`\`
 
-## File 2 — Core types
-Path: src/library/core/types.ts
-
+## File 2 — Core types (src/library/core/types.ts)
 \`\`\`ts
 import type { ReactNode } from 'react';
-
 export interface SectionTransitionProps {
   first: ReactNode;
   second: ReactNode;
@@ -145,22 +165,17 @@ export interface SectionTransitionProps {
 }
 \`\`\`
 
-## File 3 — Scroll track
-Path: src/library/core/transition-track.tsx
-
+## File 3 — Scroll track (src/library/core/transition-track.tsx)
 \`\`\`tsx
 'use client';
 import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { useScroll, useSpring, type MotionValue } from 'framer-motion';
-
 const ProgressContext = createContext<MotionValue<number> | null>(null);
-
 export function useTrackProgress(): MotionValue<number> {
   const value = useContext(ProgressContext);
   if (!value) throw new Error('useTrackProgress must be used inside <TransitionTrack>');
   return value;
 }
-
 export function TransitionTrack({ children, height = 300, className }: { children: ReactNode; height?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
@@ -181,11 +196,10 @@ ${usageCode}
 \`\`\`
 
 ## Instructions
-1. Create all four files in your project.
-2. Install: npm install ${transition.engine === 'gsap' ? 'gsap framer-motion' : 'framer-motion'}
+1. Run: npx sectionflow-cli add ${transition.slug}  (auto-installs all files and dependencies)
+2. Or manually install: npm install ${transition.engine === 'gsap' ? 'gsap framer-motion' : 'framer-motion'}
 3. Replace section content in the usage example with your real page sections.
 4. The height prop controls transition speed — increase to 400+ for a more cinematic feel.
-5. Both first and second props must render full-screen (h-full w-full) content.
 `;
 }
 
@@ -197,13 +211,7 @@ function toPascalCase(slug: string): string {
 // Main shell
 // ---------------------------------------------------------------------------
 export function TransitionDocsShell({
-  transition,
-  sourceCode,
-  sourceHtml,
-  coreFiles,
-  usageCode,
-  usageHtml,
-  relatedTransitions,
+  transition, sourceCode, sourceHtml, coreFiles, usageCode, usageHtml, relatedTransitions,
 }: {
   transition: TransitionMeta;
   sourceCode: string;
@@ -223,45 +231,30 @@ export function TransitionDocsShell({
     { label: 'Editorial UI', description: 'Cinematic motion language', icon: WandSparkles },
   ];
 
-  const aiPrompt = useMemo(
-    () => buildAiPrompt(transition, sourceCode, usageCode),
-    [transition, sourceCode, usageCode],
-  );
+  const aiPrompt = useMemo(() => buildAiPrompt(transition, sourceCode, usageCode), [transition, sourceCode, usageCode]);
 
-  // "Copy all" concatenates every file for easy one-shot pasting
-  const allCode = useMemo(
-    () => [
-      `// ── ${transition.slug}.tsx ──────────────────────────────`,
-      sourceCode,
-      '',
-      `// ── src/library/core/types.ts ───────────────────────────`,
-      ...coreFiles.filter((f) => f.filename.includes('types')).map((f) => f.source),
-      '',
-      `// ── src/library/core/transition-track.tsx ───────────────`,
-      ...coreFiles.filter((f) => f.filename.includes('track')).map((f) => f.source),
-      '',
-      `// ── Usage example (page.tsx) ────────────────────────────`,
-      usageCode,
-    ].join('\n'),
-    [transition.slug, sourceCode, coreFiles, usageCode],
-  );
+  const allCode = useMemo(() => [
+    `// ── ${transition.slug}.tsx ──────────────────────────────`,
+    sourceCode, '',
+    `// ── src/library/core/types.ts ───────────────────────────`,
+    ...coreFiles.filter((f) => f.filename.includes('types')).map((f) => f.source), '',
+    `// ── src/library/core/transition-track.tsx ───────────────`,
+    ...coreFiles.filter((f) => f.filename.includes('track')).map((f) => f.source), '',
+    `// ── Usage example (page.tsx) ────────────────────────────`,
+    usageCode,
+  ].join('\n'), [transition.slug, sourceCode, coreFiles, usageCode]);
 
   async function copyToClipboard(text: string, type: 'prompt' | 'all') {
     if (typeof navigator === 'undefined') return;
     await navigator.clipboard.writeText(text);
-    if (type === 'prompt') {
-      setCopiedPrompt(true);
-      setTimeout(() => setCopiedPrompt(false), 1600);
-    } else {
-      setCopiedAll(true);
-      setTimeout(() => setCopiedAll(false), 1600);
-    }
+    if (type === 'prompt') { setCopiedPrompt(true); setTimeout(() => setCopiedPrompt(false), 1600); }
+    else { setCopiedAll(true); setTimeout(() => setCopiedAll(false), 1600); }
   }
 
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[40px] border border-zinc-800/80 bg-[#06080c] p-2.5 sm:p-3 lg:p-4">
-        {/* Header card */}
+        {/* Header */}
         <div className="rounded-[30px] border border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 sm:p-5 lg:p-6">
           <div className="max-w-3xl">
             <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{transition.name}</h1>
@@ -272,10 +265,7 @@ export function TransitionDocsShell({
               const Icon = item.icon;
               return (
                 <div key={item.label} className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3">
-                  <div className="flex items-center gap-2 text-cyan-300">
-                    <Icon className="size-4" />
-                    <span className="text-sm font-semibold text-white">{item.label}</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-cyan-300"><Icon className="size-4" /><span className="text-sm font-semibold text-white">{item.label}</span></div>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">{item.description}</p>
                 </div>
               );
@@ -287,132 +277,60 @@ export function TransitionDocsShell({
         <div className="mt-4 overflow-hidden rounded-[30px] border border-zinc-800 bg-zinc-950 shadow-[0_0_80px_rgba(34,211,238,0.12)]">
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-3 text-[11px] uppercase tracking-[0.32em] text-zinc-500">
-            {/* Status */}
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
               <span>Preview canvas</span>
             </div>
-
-            {/* Tab switcher */}
             <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/70 p-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab('demo')}
-                className={`rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.25em] transition ${activeTab === 'demo' ? 'bg-cyan-500 text-zinc-950' : 'text-zinc-400 hover:text-white'}`}
-              >
-                Preview
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('code')}
-                className={`rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.25em] transition ${activeTab === 'code' ? 'bg-cyan-500 text-zinc-950' : 'text-zinc-400 hover:text-white'}`}
-              >
-                Code
-              </button>
+              <button type="button" onClick={() => setActiveTab('demo')} className={`rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.25em] transition ${activeTab === 'demo' ? 'bg-cyan-500 text-zinc-950' : 'text-zinc-400 hover:text-white'}`}>Preview</button>
+              <button type="button" onClick={() => setActiveTab('code')} className={`rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.25em] transition ${activeTab === 'code' ? 'bg-cyan-500 text-zinc-950' : 'text-zinc-400 hover:text-white'}`}>Code</button>
             </div>
-
-            {/* Action icons */}
             <div className="flex items-center gap-2">
               <Tooltip label={copiedPrompt ? 'Copied!' : 'Copy AI prompt'}>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(aiPrompt, 'prompt')}
-                  className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-cyan-300"
-                  aria-label="Copy AI prompt"
-                >
+                <button type="button" onClick={() => copyToClipboard(aiPrompt, 'prompt')} className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-cyan-300" aria-label="Copy AI prompt">
                   {copiedPrompt ? <Check className="size-4 text-emerald-400" /> : <Sparkles className="size-4" />}
                 </button>
               </Tooltip>
               <Tooltip label={copiedAll ? 'Copied!' : 'Copy all files'}>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(allCode, 'all')}
-                  className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                  aria-label="Copy all source files"
-                >
+                <button type="button" onClick={() => copyToClipboard(allCode, 'all')} className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white" aria-label="Copy all source files">
                   {copiedAll ? <Check className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
                 </button>
               </Tooltip>
               <Tooltip label="Full-screen demo">
-                <Link
-                  href={`/demo/${transition.slug}`}
-                  className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                  aria-label="Open full-screen demo"
-                >
+                <Link href={`/demo/${transition.slug}`} className="rounded-full border border-zinc-800 bg-zinc-900/80 p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-white" aria-label="Open full-screen demo">
                   <Expand className="size-4" />
                 </Link>
               </Tooltip>
             </div>
           </div>
 
-          {/* ── PREVIEW TAB ── */}
+          {/* PREVIEW TAB */}
           {activeTab === 'demo' && (
-            <iframe
-              src={`/demo/${transition.slug}`}
-              title={`${transition.name} demo`}
-              className="min-h-140 h-[76vh] w-full"
-            />
+            <iframe src={`/demo/${transition.slug}`} title={`${transition.name} demo`} className="min-h-140 h-[76vh] w-full" />
           )}
 
-          {/* ── CODE TAB — all files stacked ── */}
+          {/* CODE TAB */}
           {activeTab === 'code' && (
             <div className="bg-[#0d1117]">
-              {/* Top bar with file count + copy-all */}
+              {/* ── Installation command — top, always visible, no accordion ── */}
+              <InstallBlock slug={transition.slug} />
+
+              {/* Files header */}
               <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
                   <span className="font-medium text-zinc-400">4 files</span>
                   <span className="text-zinc-700">·</span>
                   <span>Click any filename to expand</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(allCode, 'all')}
-                  className="flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white"
-                >
-                  {copiedAll
-                    ? <><Check className="size-3 text-emerald-400" /> Copied all</>
-                    : <><Copy className="size-3" /> Copy all files</>}
+                <button type="button" onClick={() => copyToClipboard(allCode, 'all')} className="flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-white">
+                  {copiedAll ? <><Check className="size-3 text-emerald-400" /> Copied all</> : <><Copy className="size-3" /> Copy all files</>}
                 </button>
               </div>
 
-              {/* File 1 — transition component (open by default) */}
-              <FileBlock
-                filename={`src/library/transitions/${transition.slug}.tsx`}
-                html={sourceHtml}
-                source={sourceCode}
-                defaultOpen
-                badge="transition"
-              />
-
-              {/* File 2 — types.ts */}
-              {coreFiles.filter((f) => f.filename.includes('types')).map((f) => (
-                <FileBlock
-                  key={f.filename}
-                  filename={f.filename}
-                  html={f.html}
-                  source={f.source}
-                  badge="core"
-                />
-              ))}
-
-              {/* File 3 — transition-track.tsx */}
-              {coreFiles.filter((f) => f.filename.includes('track')).map((f) => (
-                <FileBlock
-                  key={f.filename}
-                  filename={f.filename}
-                  html={f.html}
-                  source={f.source}
-                  badge="core"
-                />
-              ))}
-
-              {/* File 4 — usage example */}
-              <FileBlock
-                filename="page.tsx (usage example)"
-                html={usageHtml}
-                source={usageCode}
-                badge="usage"
-              />
+              <FileBlock filename={`src/library/transitions/${transition.slug}.tsx`} html={sourceHtml} source={sourceCode} defaultOpen badge="transition" />
+              {coreFiles.filter((f) => f.filename.includes('types')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
+              {coreFiles.filter((f) => f.filename.includes('track')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
+              <FileBlock filename="page.tsx (usage example)" html={usageHtml} source={usageCode} badge="usage" />
             </div>
           )}
         </div>
@@ -442,34 +360,20 @@ export function TransitionDocsShell({
               <Sparkles className="size-4" />
               <h2 className="text-lg font-semibold">AI prompt</h2>
             </div>
-            <p className="mt-3 text-xs leading-6 text-zinc-500">
-              Copies a complete prompt with all 4 files — transition component, core files, and full usage example — ready to paste into any AI assistant.
-            </p>
-            <button
-              type="button"
-              onClick={() => copyToClipboard(aiPrompt, 'prompt')}
-              className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/70 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
-            >
-              {copiedPrompt
-                ? <><Check className="size-4 text-emerald-400" /> Copied to clipboard</>
-                : <><Copy className="size-4" /> Copy full prompt + code</>}
+            <p className="mt-3 text-xs leading-6 text-zinc-500">Copies a complete prompt with all 4 files plus CLI install command — ready to paste into any AI assistant.</p>
+            <button type="button" onClick={() => copyToClipboard(aiPrompt, 'prompt')} className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950/70 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white">
+              {copiedPrompt ? <><Check className="size-4 text-emerald-400" /> Copied to clipboard</> : <><Copy className="size-4" /> Copy full prompt + code</>}
             </button>
           </section>
 
           <section className="rounded-4xl border border-zinc-800 bg-zinc-900/70 p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-white">Related transitions</h2>
-              <Link href="/docs/templates" className="text-sm text-zinc-500 transition hover:text-white">
-                Browse all
-              </Link>
+              <Link href="/docs/templates" className="text-sm text-zinc-500 transition hover:text-white">Browse all</Link>
             </div>
             <div className="mt-4 space-y-3">
               {relatedTransitions.map((item) => (
-                <Link
-                  key={item.slug}
-                  href={`/docs/transitions/${item.slug}`}
-                  className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 text-sm text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                >
+                <Link key={item.slug} href={`/docs/transitions/${item.slug}`} className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 text-sm text-zinc-400 transition hover:bg-zinc-800 hover:text-white">
                   <span>{item.name}</span>
                   <ArrowRight className="size-4" />
                 </Link>

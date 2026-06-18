@@ -55,13 +55,13 @@ function Hero() {
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
       <motion.div
         aria-hidden
-        className="absolute -top-1/3 left-1/4 size-[60vmax] rounded-full bg-teal-700/25 blur-[120px]"
+        className="pointer-events-none absolute -top-1/3 left-1/4 size-[60vmax] rounded-full bg-teal-700/25 blur-[120px]"
         animate={{ x: [0, 80, -40, 0], y: [0, 40, -30, 0] }}
         transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
         aria-hidden
-        className="absolute -bottom-1/3 right-1/4 size-[55vmax] rounded-full bg-cyan-600/20 blur-[120px]"
+        className="pointer-events-none absolute -bottom-1/3 right-1/4 size-[55vmax] rounded-full bg-cyan-600/20 blur-[120px]"
         animate={{ x: [0, -70, 50, 0], y: [0, -40, 30, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -111,11 +111,11 @@ function Hero() {
       <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute bottom-20 text-white/30"
+        className="pointer-events-none absolute bottom-20 text-white/30"
       >
         <ArrowDown className="size-5" />
       </motion.div>
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden border-t border-white/10 py-4">
+      <div className="pointer-events-none absolute bottom-0 left-0 w-full overflow-hidden border-t border-white/10 py-4">
         <div className="flex w-max gap-12 whitespace-nowrap font-mono text-xs uppercase tracking-[0.25em] text-white/30 [animation:marquee_35s_linear_infinite]">
           {[...names, ...names].map((n, i) => (
             <span key={i}>{n}</span>

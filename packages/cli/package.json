@@ -1,0 +1,52 @@
+{
+  "name": "sectionflow-cli",
+  "version": "0.1.0",
+  "description": "CLI for installing SectionFlow scroll-driven section transitions",
+  "keywords": [
+    "sectionflow",
+    "transitions",
+    "react",
+    "framer-motion",
+    "gsap",
+    "cli",
+    "scroll",
+    "animation"
+  ],
+  "homepage": "https://github.com/sectionflow/sectionflow",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sectionflow/sectionflow.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "sectionflow": "dist/index.js",
+    "sectionflow-cli": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "transitions",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.8.2",
+    "commander": "^12.1.0",
+    "ora": "^8.1.1",
+    "picocolors": "^1.1.1",
+    "fast-glob": "^3.3.2",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
