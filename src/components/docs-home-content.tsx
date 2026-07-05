@@ -16,10 +16,10 @@ export function DocsHomeContent() {
               50+ production-ready transitions
             </div>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Build premium section handoffs with Framer Motion and GSAP.
+              Scroll-driven transitions with persistent layers and viewing phases.
             </h1>
             <p className="mt-4 text-lg leading-8 text-white/70">
-              SectionFlow gives you polished, copy-paste-friendly transitions for React and Next.js. Every entry ships with a live demo, source code, and an AI prompt for fast iteration.
+              SectionFlow uses a persistent-layer architecture — sections mount once, transitions animate handles, and every edge reserves a reading window before animation begins. Every entry ships with a live demo, source code, and an AI prompt.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/docs/installation" className="inline-flex items-center gap-2 rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-500">
@@ -36,9 +36,9 @@ export function DocsHomeContent() {
             </div>
             <pre className="mt-4 overflow-x-auto rounded-2xl bg-black/40 p-4 text-sm leading-7 text-emerald-300">
               <code>{`npm install framer-motion
-npm install gsap`}</code>
+# Optional: npm install gsap`}</code>
             </pre>
-            <p className="mt-4 text-sm leading-7 text-white/65">TypeScript-first, responsive, and designed to feel premium out of the box.</p>
+            <p className="mt-4 text-sm leading-7 text-white/65">Sections mount once as persistent layers. Transitions write motion values into handles — never clone content.</p>
           </div>
         </div>
       </section>
@@ -91,10 +91,10 @@ npm install gsap`}</code>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/70">
-              <Zap className="size-4" /> Framer Motion first
+              <Zap className="size-4" /> Persistent layers
             </div>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">A premium library for modern landing pages and design systems.</h2>
-            <p className="mt-4 text-lg leading-8 text-white/70">Every transition is designed for clarity, responsiveness, and production-readiness, with GSAP available when more complex choreography is required.</p>
+            <p className="mt-4 text-lg leading-8 text-white/70">Every transition reserves a viewing phase so content stays readable. Per-frame work stays on the compositor — React re-renders only on edge changes.</p>
           </div>
           <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 text-sm text-white/70">
             <div className="flex items-center gap-2 font-semibold text-white">

@@ -1,43 +1,86 @@
 ---
 title: Getting Started
-description: Scroll-driven section transitions for modern React websites.
+description: Scroll-driven section transitions with persistent layers for modern React websites.
 ---
 
-SectionFlow is a library of **scroll-driven section transitions**. Every transition pins a full-screen viewport inside a tall scroll track and choreographs the handoff between two sections as you scroll – the same pattern used by premium sites like Apple, Linear and the GSAP showcase.
+SectionFlow is a library of **scroll-driven section transitions** built on a persistent-layer architecture. Sections mount **once** as persistent layers inside a single pinned viewport. A transition is a scroll-driven **effect** that animates the relationship between two neighbouring layers — it never owns, clones, or re-renders section content.
 
 ## Quick start
 
-Every transition takes a `first` (outgoing) and `second` (incoming) section:
+Wrap your sections in `<SectionFlow>` and assign transitions per section:
 
 ```tsx
-import { CardStack } from '@/library/transitions/card-stack';
+import { SectionFlow, Section } from '@/library/core/section-flow';
+import { CardStack } from '@/library/transitions-v2/card-stack';
 
 export default function Page() {
   return (
     <main>
-      <CardStack
-        first={<section className="h-full bg-zinc-950">Section A</section>}
-        second={<section className="h-full bg-violet-700">Section B</section>}
-      />
+      {/* A normal section — no pinning, native browser scroll */}
+      <section className="min-h-screen bg-zinc-950">
+        <h1>Welcome</h1>
+      </section>
+
+      <SectionFlow heightPerSection={200} restHeight={100}>
+        {/* Outgoing edge: uses CardStack to hand off to the next section */}
+        <Section transition={CardStack}>
+          <section className="h-full w-full bg-zinc-950 flex items-center justify-center">
+            <h2>Section A</h2>
+          </section>
+        </Section>
+
+        {/* Native browser scroll — no transition declared */}
+        <Section>
+          <section className="h-full w-full bg-zinc-900 flex items-center justify-center">
+            <h2>Section B</h2>
+          </section>
+        </Section>
+      </SectionFlow>
     </main>
   );
 }
 ```
 
-Sections should fill their container (`h-full w-full`). The track renders `300vh` of scroll distance by default – tune it with the `height` prop.
+You can also resolve transitions by slug through the registry:
+
+```tsx
+<Section transition="circular-portal">
+  {/* ... */}
+</Section>
+```
 
 ## How it works
 
-All Framer Motion transitions are built on a shared core, `TransitionTrack`:
+### Persistent layers
 
-- A tall scroll region (`height` in vh) with a `sticky` full-screen viewport.
-- `useScroll` + `useSpring` produce a smooth 0→1 progress value.
-- Each transition maps that progress to transforms, clip-paths and masks with `useTransform`.
+Unlike the old `first`/`second` wrapper pattern, the v2 architecture mounts each section **exactly once** as a persistent layer. No content is cloned or rendered twice.
 
-GSAP transitions use `ScrollTrigger` with `scrub` for complex staggered timelines.
+### Transition spans
+
+`SectionFlow` groups consecutive sections with transitions into **transition spans**. Each span is one sticky viewport containing all its layers. Between spans, sections scroll with native browser behaviour — no pinning, no transforms, no motion values.
+
+### Viewing phase
+
+Every transition edge reserves a **reading window** (the `restHeight`) during which the outgoing section sits fully visible and static. Animation only begins after the user scrolls past this window, so transitions never compete with content readability.
+
+Each transition can override the viewing phase duration via its static `timing` field:
+
+```tsx
+export function MyTransition({ progress, outgoing, incoming }: TransitionProps) {
+  // ...
+}
+MyTransition.timing = { rest: 120, duration: 250 }; // in vh
+```
+
+### Per-frame performance
+
+Scroll → spring → local progress → transition motion values → GPU. React re-renders only when the active edge changes (a handful of times per traversal), not every frame.
 
 ## Principles
 
-- **60 FPS** – only compositor-friendly properties (transform, opacity, clip-path, mask).
-- **SSR compatible** – transitions are client components; your sections stay server-rendered children.
-- **Consistent API** – every transition shares the same `first` / `second` / `height` props.
+- **60 FPS** — only compositor-friendly properties (transform, opacity, clip-path, mask).
+- **No content cloning** — sections mount once as persistent layers.
+- **Viewing phase** — every transition reserves a reading window before animation begins.
+- **Flexible chains** — mix native-scroll sections and pinned transition spans freely.
+- **SSR compatible** — transitions are client components; sections stay server-rendered.
+- **Consistent API** — every transition receives the same `TransitionProps` handle contract.

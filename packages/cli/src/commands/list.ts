@@ -4,13 +4,12 @@ import { getGrouped } from '../registry/index.js';
 import { logger } from '../utils/logger.js';
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'Creative':        '✦',
-  'Split & Fragment':'⊞',
-  '3D':              '◈',
-  'Scroll':          '↕',
-  'Particles':       '✦',
-  'Premium':         '★',
-  'GSAP Powered':    '⚡',
+  'Creative':         '✦',
+  'Split & Fragment': '⊞',
+  '3D':               '◈',
+  'Scroll':           '↕',
+  'Particles':        '✦',
+  'Premium':          '★',
 };
 
 export async function listCommand(): Promise<void> {
@@ -25,9 +24,7 @@ export async function listCommand(): Promise<void> {
     console.log(pc.bold(pc.white(`  ${icon} ${category}`)));
 
     for (const entry of entries) {
-      const engine = entry.engine === 'gsap'
-        ? pc.dim(pc.yellow('  gsap          '))
-        : pc.dim(pc.cyan('  framer-motion '));
+      const engine = pc.dim(pc.cyan('  framer-motion '));
       console.log(`    ${pc.white(entry.slug.padEnd(28))}${engine}${pc.dim(entry.title)}`);
       total++;
     }

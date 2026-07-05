@@ -143,63 +143,71 @@ ${transition.description}
 - Styling: Tailwind CSS v4
 - Language: TypeScript
 
-## CLI Installation
-npx sectionflow-cli add ${transition.slug}
+## Architecture — v2 persistent layers
+Sections are mounted once as persistent layers inside a single pinned viewport.
+The transition is a scroll-driven EFFECT that writes motion values (scale, y,
+clipPath, maskImage, opacity, …) into the \`outgoing\` and \`incoming\` layer
+handles. It never owns or clones section content. A viewing phase (rest zone)
+keeps the outgoing section fully visible and static before animation begins.
 
-## How it works
-The transition uses a sticky scroll track (TransitionTrack) that creates a tall scrollable region (default 300 vh). A spring-smoothed progress value (0→1) drives every animation. Dead zone: 0%–25% is content reading time — no animation fires until 25% scroll.
-
-## File 1 — Transition component (src/library/transitions/${transition.slug}.tsx)
+## File 1 — Transition component (src/library/transitions-v2/${transition.slug}.tsx)
 \`\`\`tsx
 ${sourceCode}
 \`\`\`
 
 ## File 2 — Core types (src/library/core/types.ts)
 \`\`\`ts
-import type { ReactNode } from 'react';
-export interface SectionTransitionProps {
-  first: ReactNode;
-  second: ReactNode;
-  height?: number;
+import type { ReactNode, ComponentType, ReactElement } from 'react';
+import type { MotionValue, MotionStyle } from 'framer-motion';
+
+export type TransitionDirection = 'forward' | 'reverse';
+export interface Viewport { width: number; height: number; }
+export interface LayerBounds { width: number; height: number; top: number; left: number; }
+export interface LayerHandle { style: MotionStyle; bounds: LayerBounds; render?: () => ReactElement; }
+
+export interface TransitionProps {
+  progress: MotionValue<number>;
+  direction: TransitionDirection;
+  viewport: Viewport;
+  outgoing: LayerHandle;
+  incoming: LayerHandle;
+}
+export type TransitionComponent = ComponentType<TransitionProps> & { timing?: { rest?: number; duration?: number }; copies?: boolean };
+export type TransitionResolver = TransitionComponent | string;
+
+export interface SectionProps {
+  children: ReactNode;
+  transition?: TransitionResolver;
+  className?: string;
+}
+export interface SectionFlowProps {
+  children: ReactNode;
+  heightPerSection?: number;
+  restHeight?: number;
+  defaultTransition?: TransitionResolver;
   className?: string;
 }
 \`\`\`
 
-## File 3 — Scroll track (src/library/core/transition-track.tsx)
-\`\`\`tsx
-'use client';
-import { createContext, useContext, useRef, type ReactNode } from 'react';
-import { useScroll, useSpring, type MotionValue } from 'framer-motion';
-const ProgressContext = createContext<MotionValue<number> | null>(null);
-export function useTrackProgress(): MotionValue<number> {
-  const value = useContext(ProgressContext);
-  if (!value) throw new Error('useTrackProgress must be used inside <TransitionTrack>');
-  return value;
-}
-export function TransitionTrack({ children, height = 300, className }: { children: ReactNode; height?: number; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
-  const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 28, mass: 0.4, restDelta: 0.0001 });
-  return (
-    <div ref={ref} style={{ height: \`\${height}vh\` }} className={\`relative w-full \${className ?? ''}\`}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        <ProgressContext.Provider value={smooth}>{children}</ProgressContext.Provider>
-      </div>
-    </div>
-  );
-}
-\`\`\`
+## File 3 — SectionFlow stage (src/library/core/section-flow.tsx)
+The stage manages persistent layers and transition spans. Sections mount once.
+Per-frame work stays on the compositor: scroll → spring → local progress →
+transition motion values → GPU. React re-renders only on edge changes.
 
-## File 4 — Full page usage example
+## File 4 — Registry (src/library/core/registry-v2.ts)
+Maps string slugs to TransitionComponents so <Section transition="slug"> works.
+
+## File 5 — Full page usage example
 \`\`\`tsx
 ${usageCode}
 \`\`\`
 
 ## Instructions
-1. Run: npx sectionflow-cli add ${transition.slug}  (auto-installs all files and dependencies)
-2. Or manually install: npm install ${transition.engine === 'gsap' ? 'gsap framer-motion' : 'framer-motion'}
-3. Replace section content in the usage example with your real page sections.
-4. The height prop controls transition speed — increase to 400+ for a more cinematic feel.
+1. Manually install: npm install ${transition.engine === 'gsap' ? 'gsap framer-motion' : 'framer-motion'}
+2. Copy the transition file into src/library/transitions-v2/
+3. Register it in registry-v2.ts
+4. Use <SectionFlow> + <Section> to compose your page
+5. heightPerSection controls animation speed; restHeight controls reading window
 `;
 }
 
@@ -234,12 +242,14 @@ export function TransitionDocsShell({
   const aiPrompt = useMemo(() => buildAiPrompt(transition, sourceCode, usageCode), [transition, sourceCode, usageCode]);
 
   const allCode = useMemo(() => [
-    `// ── ${transition.slug}.tsx ──────────────────────────────`,
+    `// ── ${transition.slug}.tsx (transitions-v2/) ────────────`,
     sourceCode, '',
     `// ── src/library/core/types.ts ───────────────────────────`,
     ...coreFiles.filter((f) => f.filename.includes('types')).map((f) => f.source), '',
-    `// ── src/library/core/transition-track.tsx ───────────────`,
-    ...coreFiles.filter((f) => f.filename.includes('track')).map((f) => f.source), '',
+    `// ── src/library/core/section-flow.tsx ──────────────────`,
+    ...coreFiles.filter((f) => f.filename.includes('section-flow')).map((f) => f.source), '',
+    `// ── src/library/core/registry-v2.ts ────────────────────`,
+    ...coreFiles.filter((f) => f.filename.includes('registry')).map((f) => f.source), '',
     `// ── Usage example (page.tsx) ────────────────────────────`,
     usageCode,
   ].join('\n'), [transition.slug, sourceCode, coreFiles, usageCode]);
@@ -318,7 +328,7 @@ export function TransitionDocsShell({
               {/* Files header */}
               <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="font-medium text-zinc-400">4 files</span>
+                  <span className="font-medium text-zinc-400">5 files</span>
                   <span className="text-zinc-700">·</span>
                   <span>Click any filename to expand</span>
                 </div>
@@ -327,9 +337,10 @@ export function TransitionDocsShell({
                 </button>
               </div>
 
-              <FileBlock filename={`src/library/transitions/${transition.slug}.tsx`} html={sourceHtml} source={sourceCode} defaultOpen badge="transition" />
+              <FileBlock filename={`src/library/transitions-v2/${transition.slug}.tsx`} html={sourceHtml} source={sourceCode} defaultOpen badge="transition" />
               {coreFiles.filter((f) => f.filename.includes('types')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
-              {coreFiles.filter((f) => f.filename.includes('track')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
+              {coreFiles.filter((f) => f.filename.includes('section-flow')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
+              {coreFiles.filter((f) => f.filename.includes('registry')).map((f) => <FileBlock key={f.filename} filename={f.filename} html={f.html} source={f.source} badge="core" />)}
               <FileBlock filename="page.tsx (usage example)" html={usageHtml} source={usageCode} badge="usage" />
             </div>
           )}

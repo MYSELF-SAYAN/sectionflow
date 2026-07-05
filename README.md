@@ -4,7 +4,7 @@
 
 **52 production-ready, scroll-driven section transitions for modern React websites.**
 
-Framer Motion first. GSAP when you need multi-phase choreography.
+Powered by Framer Motion.
 
 [Browse the Gallery](http://localhost:3000/docs/templates) · [Read the Docs](http://localhost:3000/docs) · [Live Demos](http://localhost:3000/demo/wave-reveal)
 
@@ -160,29 +160,6 @@ const y = useTransform(p, [0.05, 0.85], ['100%', '0%']);
 const y = useTransform(p, [0.30, 0.95], ['100%', '0%']);
 ```
 
-### GSAP Transitions
-
-GSAP-based transitions follow the same sticky-track HTML pattern but use `ScrollTrigger` with `scrub` instead of Framer Motion's `useScroll`:
-
-```tsx
-useLayoutEffect(() => {
-  const ctx = gsap.context(() => {
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: root.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.6,
-      },
-    });
-    // 0→0.30: dead zone (nothing in timeline = nothing animated)
-    // 0.30→1.00: all animations here
-    tl.fromTo(element, { ... }, { ... }, 0.30);
-  }, root);
-  return () => ctx.revert();
-}, []);
-```
-
 ---
 
 ## Transition API
@@ -235,8 +212,8 @@ Some transitions extend this with additional props (e.g. `WaveReveal` accepts `w
 | Blinds Reveal | `blinds-reveal` | Framer Motion |
 | Dot Matrix Reveal | `dot-matrix` | Framer Motion |
 | Paper Tear | `paper-tear` | Framer Motion |
-| Shatter Transition | `shatter` | GSAP |
-| Infinite Grid | `infinite-grid` | GSAP |
+| Shatter Transition | `shatter` | Framer Motion |
+| Infinite Grid | `infinite-grid` | Framer Motion |
 
 #### 3D & Perspective
 | Name | Slug | Engine |
@@ -247,10 +224,10 @@ Some transitions extend this with additional props (e.g. `WaveReveal` accepts `w
 | Cinematic Zoom | `cinematic-zoom` | Framer Motion |
 | Layered Depth Shift | `depth-layers` | Framer Motion |
 | Hero Morph | `hero-morph` | Framer Motion |
-| Infinite Tunnel | `infinite-tunnel` | GSAP |
-| Spatial Warp | `spatial-warp` | GSAP |
-| Dynamic Portal | `dynamic-portal` | GSAP |
-| Camera Flythrough | `camera-flythrough` | GSAP |
+| Infinite Tunnel | `infinite-tunnel` | Framer Motion |
+| Spatial Warp | `spatial-warp` | Framer Motion |
+| Dynamic Portal | `dynamic-portal` | Framer Motion |
+| Camera Flythrough | `camera-flythrough` | Framer Motion |
 
 #### Scroll Physics
 | Name | Slug | Engine |
@@ -262,34 +239,30 @@ Some transitions extend this with additional props (e.g. `WaveReveal` accepts `w
 | Scroll Warp | `scroll-warp` | Framer Motion |
 | Progressive Morph | `progressive-morph` | Framer Motion |
 | Direction-Based Reveal | `direction-reveal` | Framer Motion |
-| Multi-Layer Scroll | `multi-layer-scroll` | GSAP |
+| Multi-Layer Scroll | `multi-layer-scroll` | Framer Motion |
 
 #### Particles
 | Name | Slug | Engine |
 |------|------|--------|
 | Particle Dissolve | `particle-dissolve` | Framer Motion |
 | Floating Particle Flow | `floating-particles` | Framer Motion |
-| Particle Explosion | `particle-explosion` | GSAP |
-| Particle Assembly | `particle-assembly` | GSAP |
-| Orbiting Particle Reveal | `orbiting-particles` | GSAP |
-| Dust Simulation | `dust-simulation` | GSAP |
-| Energy Burst | `energy-burst` | GSAP |
-| Interactive Particles | `interactive-particles` | GSAP |
+| Particle Explosion | `particle-explosion` | Framer Motion |
+| Particle Assembly | `particle-assembly` | Framer Motion |
+| Orbiting Particle Reveal | `orbiting-particles` | Framer Motion |
+| Dust Simulation | `dust-simulation` | Framer Motion |
+| Energy Burst | `energy-burst` | Framer Motion |
+| Interactive Particles | `interactive-particles` | Framer Motion |
 
 #### Premium
 | Name | Slug | Engine |
 |------|------|--------|
-| Cloth Simulation Reveal | `cloth-reveal` | GSAP |
-| Lens Distortion | `lens-distortion` | GSAP |
-| SVG Shape Morph | `svg-shape-morph` | GSAP |
-| Prism Refraction | `prism-refraction` | GSAP |
-| Volumetric Light Reveal | `volumetric-light` | GSAP |
+| Cloth Simulation Reveal | `cloth-reveal` | Framer Motion |
+| Lens Distortion | `lens-distortion` | Framer Motion |
+| SVG Shape Morph | `svg-shape-morph` | Framer Motion |
+| Prism Refraction | `prism-refraction` | Framer Motion |
+| Volumetric Light Reveal | `volumetric-light` | Framer Motion |
 
-#### GSAP Powered
-| Name | Slug | Engine |
-|------|------|--------|
-| GSAP Pin Wipe | `gsap-pin-wipe` | GSAP |
-| GSAP Stagger Wipe | `gsap-stagger-wipe` | GSAP |
+
 
 ---
 
@@ -369,19 +342,7 @@ The `height` prop controls how many viewport-heights of scroll the transition ta
 
 > **Note:** When chaining, each section content is rendered twice — once as `second` in the previous transition and once as `first` in the next. This is intentional and correct; the transitions are purely visual overlays driven by scroll.
 
-### Using a GSAP transition
 
-GSAP transitions work identically from the consumer side:
-
-```tsx
-import { ClothReveal } from '@/library/transitions/cloth-reveal';
-
-<ClothReveal
-  height={350}
-  first={<DarkSection />}
-  second={<LightSection />}
-/>
-```
 
 ### Custom wave colour
 
@@ -537,7 +498,7 @@ That's it. The docs page at `/docs/transitions/my-transition` and the demo at `/
 | **Next.js 16** | App Router, static generation, server components |
 | **React 19** | UI rendering |
 | **Framer Motion 12** | Primary animation engine — motion values, springs, transforms |
-| **GSAP 3 + ScrollTrigger** | Secondary engine for staggered, multi-phase timelines |
+
 | **Tailwind CSS v4** | Utility styling |
 | **Fumadocs** | MDX docs system — sidebar, search, MDX rendering |
 | **Shiki** | Server-side syntax highlighting for the code tab |
@@ -617,6 +578,6 @@ MIT — use freely in personal and commercial projects. Attribution appreciated 
 
 <div align="center">
 
-Built with ❤️ using Framer Motion + GSAP + Next.js
+Built with ❤️ using Framer Motion + Next.js
 
 </div>

@@ -1,11 +1,18 @@
 ---
-title: Getting Started
-description: Add SectionFlow scroll-driven section transitions to your project in seconds using the CLI or manual copy-paste.
+title: Installation
+description: Add SectionFlow v2 scroll-driven section transitions to your project via the CLI or manual copy-paste. Supports Next.js, Vite, and CRA.
 ---
 
-## Two ways to install
+## Framework support
 
-SectionFlow ships a CLI tool (`sectionflow-cli`) for one-command installation, and every component is also available as a plain copy-paste file.
+SectionFlow's v2 architecture is framework-agnostic — the core engine and every transition are pure React + Framer Motion. The CLI auto-detects your setup and emits the correct import paths:
+
+| Framework | Detection | Import alias |
+|-----------|-----------|--------------|
+| Next.js (App Router) | `next` + `app/` dir | `@/components/sectionflow/...` |
+| Next.js (Pages Router) | `next` + `pages/` dir | `@/components/sectionflow/...` |
+| Vite + React | `vite` in deps | `@/...` if configured, else relative |
+| React (CRA / other) | fallback | `@/...` if configured, else relative |
 
 ---
 
@@ -13,7 +20,7 @@ SectionFlow ships a CLI tool (`sectionflow-cli`) for one-command installation, a
 
 ### 1. Initialize your project
 
-Run this once to scaffold the two core files SectionFlow needs:
+Run this once to scaffold the three core files SectionFlow needs:
 
 ```bash
 npx sectionflow-cli init
@@ -24,25 +31,26 @@ This creates:
 ```
 components/sectionflow/
 └── core/
-    ├── types.ts              ← SectionTransitionProps interface
-    └── transition-track.tsx  ← Sticky scroll track + spring progress context
+    ├── types.ts           ← TransitionProps, LayerHandle, SectionProps
+    ├── section-flow.tsx   ← SectionFlow + Section (persistent-layer stage)
+    └── registry-v2.ts     ← Empty slug → component map (add appends entries)
 ```
 
-The command auto-detects your project structure (Next.js App Router, Pages Router, `src/` layout) and installs `framer-motion` if it isn't already present.
+The command auto-detects your framework (Next.js, Vite, CRA), project structure (`src/` layout), and installs `framer-motion`.
 
 ### 2. Add a transition
 
 ```bash
-npx sectionflow-cli add wave-reveal
+npx sectionflow-cli add card-stack
 ```
 
 Install multiple at once:
 
 ```bash
-npx sectionflow-cli add card-stack cinematic-zoom depth-layers
+npx sectionflow-cli add card-stack circular-portal wave-reveal
 ```
 
-Each transition is written to `components/sectionflow/transitions/`. Required npm packages (`framer-motion` or `gsap`) are installed automatically.
+Each transition is written to `components/sectionflow/transitions-v2/`, and its import + registry entry are appended to `core/registry-v2.ts` automatically — so `<Section transition="card-stack">` resolves out of the box.
 
 ### 3. Browse available transitions
 
@@ -50,18 +58,16 @@ Each transition is written to `components/sectionflow/transitions/`. Required np
 npx sectionflow-cli list
 ```
 
-Output is grouped by category with engine labels so you can quickly find what you need.
+Output is grouped by category. All 59 v2 transitions run on Framer Motion.
 
 ### Package manager support
 
-The same commands work across all package managers:
-
 | Manager | Command |
 |---------|---------|
-| npm     | `npx sectionflow-cli add wave-reveal` |
-| pnpm    | `pnpm dlx sectionflow-cli add wave-reveal` |
-| yarn    | `yarn dlx sectionflow-cli add wave-reveal` |
-| bun     | `bunx sectionflow-cli add wave-reveal` |
+| npm     | `npx sectionflow-cli add card-stack` |
+| pnpm    | `pnpm dlx sectionflow-cli add card-stack` |
+| yarn    | `yarn dlx sectionflow-cli add card-stack` |
+| bun     | `bunx sectionflow-cli add card-stack` |
 
 ---
 
@@ -71,129 +77,62 @@ Every transition doc page has a **Code** tab with all the files you need. Click 
 
 ### Step 1 — Install the animation runtime
 
-For Framer Motion transitions:
-
 ```bash
 npm install framer-motion
 ```
 
-For GSAP transitions:
-
-```bash
-npm install gsap framer-motion
-```
-
 ### Step 2 — Create the core files
 
-Create `src/components/sectionflow/core/types.ts`:
-
-```ts
-import type { ReactNode } from 'react';
-
-export interface SectionTransitionProps {
-  /** The outgoing section – fills the screen when the track starts. */
-  first: ReactNode;
-  /** The incoming section – fills the screen when the track ends. */
-  second: ReactNode;
-  /** Scroll track height in vh. Longer = slower transition. @default 300 */
-  height?: number;
-  className?: string;
-}
-```
-
-Create `src/components/sectionflow/core/transition-track.tsx`:
-
-```tsx
-'use client';
-
-import { createContext, useContext, useRef, type ReactNode } from 'react';
-import { useScroll, useSpring, type MotionValue } from 'framer-motion';
-
-const ProgressContext = createContext<MotionValue<number> | null>(null);
-
-export function useTrackProgress(): MotionValue<number> {
-  const value = useContext(ProgressContext);
-  if (!value) throw new Error('useTrackProgress must be used inside <TransitionTrack>');
-  return value;
-}
-
-export function TransitionTrack({
-  children,
-  height = 300,
-  className,
-}: {
-  children: ReactNode;
-  height?: number;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end end'],
-  });
-  const smooth = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 28,
-    mass: 0.4,
-    restDelta: 0.0001,
-  });
-
-  return (
-    <div
-      ref={ref}
-      style={{ height: `${height}vh` }}
-      className={`relative w-full ${className ?? ''}`}
-    >
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        <ProgressContext.Provider value={smooth}>
-          {children}
-        </ProgressContext.Provider>
-      </div>
-    </div>
-  );
-}
-```
+Create `components/sectionflow/core/types.ts`, `section-flow.tsx`, and `registry-v2.ts`. Copy their contents from the [API Reference](/docs/api) or the Code tab of any transition.
 
 ### Step 3 — Copy a transition
 
 Open any transition's doc page, click **Code**, then copy the file under the `transition` badge. Place it at:
 
 ```
-src/components/sectionflow/transitions/<slug>.tsx
+components/sectionflow/transitions-v2/<slug>.tsx
 ```
 
-### Step 4 — Use it in your page
+### Step 4 — Register and use it
+
+Add the import and registry entry to `core/registry-v2.ts`:
+
+```ts
+import { CardStack } from '../transitions-v2/card-stack';
+
+export const transitionRegistry: Record<string, TransitionComponent> = {
+  'card-stack': CardStack,
+};
+```
+
+Then use it in your page:
 
 ```tsx
-import { WaveReveal } from '@/components/sectionflow/transitions/wave-reveal';
+import { SectionFlow, Section } from '@/components/sectionflow/core/section-flow';
+import { CardStack } from '@/components/sectionflow/transitions-v2/card-stack';
 
 export default function Page() {
   return (
     <main>
-      {/* Normal full-height section above */}
+      {/* Native-scroll hero */}
       <section className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
-        <h1 className="text-6xl font-bold">Section One</h1>
+        <h1 className="text-6xl font-bold">Welcome</h1>
       </section>
 
-      {/* Transition — first is outgoing, second is incoming */}
-      <WaveReveal
-        height={300}
-        first={
+      <SectionFlow heightPerSection={200} restHeight={100}>
+        <Section transition={CardStack}>
           <div className="h-full w-full bg-zinc-950 flex items-center justify-center text-white">
-            <h2 className="text-4xl font-semibold">Outgoing</h2>
+            <h2 className="text-4xl">Outgoing section</h2>
           </div>
-        }
-        second={
-          <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-white">
-            <h2 className="text-4xl font-semibold">Incoming</h2>
-          </div>
-        }
-      />
+        </Section>
 
-      {/* Normal section below */}
-      <section className="min-h-screen bg-zinc-900 flex items-center justify-center text-white">
-        <h1 className="text-6xl font-bold">Section Two</h1>
-      </section>
+        {/* Native scroll section */}
+        <Section>
+          <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-white">
+            <h2 className="text-4xl">Incoming section</h2>
+          </div>
+        </Section>
+      </SectionFlow>
     </main>
   );
 }
@@ -201,48 +140,31 @@ export default function Page() {
 
 ---
 
-## How the scroll track works
+## How the scroll stage works
 
-Every transition uses a shared sticky scroll mechanism:
+`SectionFlow` groups consecutive `<Section>` children with transitions into **transition spans** (pinned viewports). Each span reserves a viewing phase before the animation begins:
 
 ```
-┌─────────────────────────────────┐
-│  0% – 25%   Content viewing     │  Section is fully readable, zero animation
-│  25% – 75%  Transition buildup  │  Animation begins, outgoing exits
-│  75% – 100% Section handoff     │  Incoming section fully arrives
-└─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  restHeight (100vh)   Viewing phase — section is static │
+│                        and fully readable                │
+│  heightPerSection     Animation window — the transition │
+│  (200vh)               plays across this scroll distance │
+└─────────────────────────────────────────────────────────┘
 ```
-
-The `height` prop controls how many viewport-heights of scroll the transition takes. Default is `300vh`. A higher value gives more room to scroll through the content before the transition fires.
 
 ```tsx
-{/* Fast – 250vh total */}
-<CardStack height={250} first={...} second={...} />
+{/* Fast animation, short reading window */}
+<SectionFlow heightPerSection={150} restHeight={80}>...</SectionFlow>
 
 {/* Default */}
-<CardStack height={300} first={...} second={...} />
+<SectionFlow heightPerSection={200} restHeight={100}>...</SectionFlow>
 
-{/* Slow, cinematic – 450vh total */}
-<CardStack height={450} first={...} second={...} />
+{/* Slow, cinematic — long reading window */}
+<SectionFlow heightPerSection={300} restHeight={150}>...</SectionFlow>
 ```
 
----
-
-## Chaining multiple transitions
-
-Sections can be chained directly:
-
-```tsx
-<main>
-  <HeroSection />
-  <WaveReveal    first={<HeroSection />}  second={<AboutSection />} />
-  <CardStack     first={<AboutSection />} second={<WorkSection />}  />
-  <ParallaxShift first={<WorkSection />}  second={<CtaSection />}   />
-  <CtaSection />
-</main>
-```
-
-Each section is rendered twice (as `second` in one transition and `first` in the next). This is intentional — the transitions are visual overlays, not DOM wrappers.
+Individual transitions can override the viewing phase via their static `timing` field — the CLI attaches these automatically where applicable.
 
 ---
 
@@ -251,11 +173,9 @@ Each section is rendered twice (as `second` in one transition and `first` in the
 | Requirement | Version |
 |-------------|---------|
 | React | 18+ |
-| Next.js | 14+ (App Router or Pages Router) |
+| Next.js | 14+ (App Router or Pages Router) — or Vite, or CRA |
 | framer-motion | 11+ |
-| gsap | 3.12+ (GSAP transitions only) |
 | TypeScript | 5+ (recommended) |
-| Tailwind CSS | Any version (transitions use inline styles, Tailwind is optional) |
 
 ---
 
@@ -266,10 +186,11 @@ src/
 └── components/
     └── sectionflow/
         ├── core/
-        │   ├── types.ts
-        │   └── transition-track.tsx
-        └── transitions/
-            ├── wave-reveal.tsx
+        │   ├── types.ts              ← TransitionProps, LayerHandle, SectionProps
+        │   ├── section-flow.tsx      ← SectionFlow + Section (persistent-layer stage)
+        │   └── registry-v2.ts        ← Slug → component resolver
+        └── transitions-v2/
             ├── card-stack.tsx
+            ├── circular-portal.tsx
             └── ...
 ```

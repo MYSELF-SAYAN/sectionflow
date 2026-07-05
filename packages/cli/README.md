@@ -6,16 +6,16 @@ A shadcn-style CLI for adding scroll-driven section transitions to your React pr
 
 ```bash
 # Initialize SectionFlow in your project
-npx sectionflow init
+npx sectionflow-cli init
 
 # Add a transition
-npx sectionflow add wave-reveal
+npx sectionflow-cli add wave-reveal
 
 # Add multiple transitions at once
-npx sectionflow add card-stack cinematic-zoom depth-layers
+npx sectionflow-cli add card-stack cinematic-zoom depth-layers
 
 # Browse all available transitions
-npx sectionflow list
+npx sectionflow-cli list
 ```
 
 ## Commands
@@ -27,8 +27,9 @@ Detects your project structure and installs the two core files:
 ```
 components/sectionflow/
 └── core/
-    ├── types.ts              ← SectionTransitionProps interface
-    └── transition-track.tsx  ← Sticky scroll track + spring progress
+    ├── types.ts              ← TransitionProps & LayerHandle interfaces
+    ├── section-flow.tsx      ← Sticky scroll staging components
+    └── registry.ts           ← Auto-updated transition map
 ```
 
 Supports:
@@ -41,8 +42,8 @@ Supports:
 Installs one or more transitions:
 
 ```bash
-npx sectionflow add wave-reveal
-npx sectionflow add page-burn pixel-melt starfield-warp
+npx sectionflow-cli add wave-reveal
+npx sectionflow-cli add page-burn pixel-melt starfield-warp
 ```
 
 Each transition is written to:
@@ -71,8 +72,6 @@ Displays all available transitions grouped by category with engine labels:
   ✦ Creative
     wave-reveal          framer-motion   Wave Reveal
     circular-portal      framer-motion   Circular Portal
-    page-burn            gsap            Page Burn
-    pixel-melt           gsap            Pixel Melt
     ...
 
   ⊞ Split & Fragment
@@ -84,28 +83,24 @@ Displays all available transitions grouped by category with engine labels:
 ## Usage After Installation
 
 ```tsx
-import { WaveReveal } from '@/components/sectionflow/transitions/wave-reveal';
+import { SectionFlow, Section } from '@/components/sectionflow/core/section-flow';
 
 export default function Page() {
   return (
     <main>
-      <HeroSection />
-
-      <WaveReveal
-        height={300}
-        first={
-          <div className="h-full w-full bg-zinc-950 flex items-center justify-center text-white">
+      <SectionFlow>
+        <Section transition="wave-reveal">
+          <div className="h-screen w-full bg-zinc-950 flex items-center justify-center text-white">
             <h2>Outgoing section</h2>
           </div>
-        }
-        second={
-          <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-white">
+        </Section>
+
+        <Section>
+          <div className="h-screen w-full bg-zinc-900 flex items-center justify-center text-white">
             <h2>Incoming section</h2>
           </div>
-        }
-      />
-
-      <FooterSection />
+        </Section>
+      </SectionFlow>
     </main>
   );
 }
@@ -130,7 +125,8 @@ components/
 └── sectionflow/
     ├── core/
     │   ├── types.ts
-    │   └── transition-track.tsx
+    │   ├── section-flow.tsx
+    │   └── registry.ts
     └── transitions/
         ├── wave-reveal.tsx
         ├── card-stack.tsx
@@ -140,19 +136,18 @@ components/
 ## Dependencies
 
 - Framer Motion transitions require: `framer-motion`
-- GSAP transitions require: `gsap`
 
 The CLI installs required packages automatically using your project's package manager (npm/yarn/pnpm).
 
 ## Adding New Registry Entries
 
-To register a new transition, add an entry to `src/registry/index.ts`:
+To register a new transition for the CLI itself, add an entry to the canonical metadata file `src/library/registry.ts`:
 
 ```ts
-{ slug: 'my-transition', title: 'My Transition', category: 'Creative', engine: 'framer-motion', description: '...' },
+{ slug: 'my-transition', name: 'My Transition', category: 'Creative', engine: 'framer-motion', description: '...' },
 ```
 
-Then create the source file at `src/library/transitions/my-transition.tsx` in the main project. The CLI reads source files directly from the project.
+Then create the source file at `src/library/transitions/my-transition.tsx` in the main project. The CLI copies files directly from the canonical library during `npm run sync:sources`.
 
 ## License
 

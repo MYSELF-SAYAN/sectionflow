@@ -1,0 +1,407 @@
+'use client';
+
+import {
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  Children,
+  isValidElement,
+  type ReactElement,
+} from 'react';
+import {
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+  useVelocity,
+  useMotionValueEvent,
+  type MotionStyle,
+} from 'framer-motion';
+
+import type {
+  SectionProps,
+  SectionFlowProps,
+  LayerHandle,
+  LayerBounds,
+  Viewport,
+  TransitionDirection,
+  TransitionComponent,
+  TransitionResolver,
+} from './types';
+import { resolveTransition } from './registry-v2';
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Segment model
+ *
+ * Authored children are flattened ONCE into an ordered list of Sections, then
+ * grouped into segments:
+ *
+ *   • flow       – a section that scrolls with native browser behaviour
+ *                  (it declared no outgoing transition, or has no successor).
+ *                  Rendered as a plain <section> in document flow. No pinning,
+ *                  no transforms, no motion values. Fully native scroll.
+ *
+ *   • transition – a maximal run of sections [i .. j] where every section
+ *                  i..j-1 declares an outgoing transition. Section j terminates
+ *                  the chain. All j-i+1 sections live inside ONE pinned span as
+ *                  persistent layers, each mounted exactly once. The span
+ *                  animates one edge at a time, handing the incoming/outgoing
+ *                  role down the chain.
+ *
+ * A section therefore exists in exactly one segment, exactly once. It is never
+ * cloned and never rendered twice.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+type ResolvedSection = {
+  key: string;
+  children: SectionProps['children'];
+  className?: string;
+  /** Outgoing transition component, or null if this section has none. */
+  transition: TransitionComponent | null;
+};
+
+type Segment =
+  | { kind: 'flow'; section: ResolvedSection }
+  | { kind: 'transition'; sections: ResolvedSection[] };
+
+function isSectionElement(el: unknown): el is ReactElement<SectionProps> {
+  return (
+    isValidElement(el) &&
+    (el.type as { __sf_section?: boolean }).__sf_section === true
+  );
+}
+
+function buildSegments(sections: ResolvedSection[]): Segment[] {
+  const segments: Segment[] = [];
+  let i = 0;
+  while (i < sections.length) {
+    const s = sections[i];
+    if (s.transition && i < sections.length - 1) {
+      const run: ResolvedSection[] = [s];
+      let j = i + 1;
+      while (j < sections.length) {
+        const prev = run[run.length - 1];
+        if (!prev.transition) break;        // chain already terminated
+        run.push(sections[j]);              // j becomes the incoming layer
+        if (!sections[j].transition) break; // j has no outgoing → terminal
+        if (j === sections.length - 1) break; // j is last child → terminal
+        j++;
+      }
+      segments.push({ kind: 'transition', sections: run });
+      i += run.length;
+    } else {
+      // No transition (or no successor): pure native-scroll section.
+      segments.push({ kind: 'flow', section: s });
+      i++;
+    }
+  }
+  return segments;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Pinned transition span
+ *
+ * One sticky viewport. N persistent layers (one per section in the run), each
+ * mounted once and keyed by its authored position. Exactly one transition is
+ * active at a time; it writes motion values into the shared style bags of the
+ * two layers it choreographs.
+ *
+ * Per-frame work stays on the compositor: scroll → spring → local progress →
+ * transition motion values → GPU. React re-renders only when the active edge
+ * changes (a handful of times per traversal), not every frame.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+function TransitionSpan({
+  sections,
+  heightPerSection,
+  restHeight,
+}: {
+  sections: ResolvedSection[];
+  heightPerSection: number;
+  restHeight: number;
+}) {
+  const spineRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  // One scroll source, one spring — shared by every edge in the span.
+  const { scrollYProgress } = useScroll({
+    target: spineRef,
+    offset: ['start start', 'end end'],
+  });
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 28,
+    mass: 0.4,
+    restDelta: 0.0001,
+  });
+  const velocity = useVelocity(progress);
+
+  const edgeCount = Math.max(1, sections.length - 1);
+
+  // ── Per-edge timing table ────────────────────────────────────────────────
+  // Each edge e owns three phases:
+  //   1. rest    – reading window before the transition (outgoing section visible).
+  //   2. duration – animation window over which the handoff plays.
+  //   3. postRest – reading window after the transition (incoming section visible).
+  // The incoming section stays pinned and fully legible during postRest, giving
+  // viewers time to absorb the content before native scrolling resumes.
+  // A transition may override rest/duration via its static `timing` field.
+  // postRest defaults to the same value as restHeight.
+  const edges = useMemo(() => {
+    const list: { rest: number; duration: number; postRest: number; span: number; start: number }[] = [];
+    let cursor = 0;
+    for (let e = 0; e < edgeCount; e++) {
+      const t = sections[e]?.transition;
+      const rest = t?.timing?.rest ?? restHeight;
+      const duration = t?.timing?.duration ?? heightPerSection;
+      const postRest = t?.timing?.rest ?? restHeight;
+      const span = rest + duration + postRest;
+      list.push({ rest, duration, postRest, span, start: cursor });
+      cursor += span;
+    }
+    return { list, total: cursor };
+  }, [sections, edgeCount, restHeight, heightPerSection]);
+
+  const totalHeight = edges.total;
+
+  // Which edge is active? Derived from absolute scroll offset against the
+  // cumulative boundary table so each edge's per-transition rest zone holds.
+  const [activeEdge, setActiveEdge] = useState(0);
+  const [direction, setDirection] = useState<TransitionDirection>('forward');
+  useMotionValueEvent(progress, 'change', (p) => {
+    const offsetVh = p * edges.total;
+    let next = 0;
+    for (let e = 0; e < edges.list.length; e++) {
+      if (offsetVh >= edges.list[e].start) next = e;
+      else break;
+    }
+    next = Math.min(edgeCount - 1, Math.max(0, next));
+    if (next !== activeEdge) setActiveEdge(next);
+  });
+  useMotionValueEvent(velocity, 'change', (v) => {
+    const dir: TransitionDirection = v >= 0 ? 'forward' : 'reverse';
+    if (dir !== direction) setDirection(dir);
+  });
+
+  const viewport = useViewportSize(viewportRef);
+
+  // One persistent style bag per layer. The bags are recreated whenever the
+  // active edge changes, so a layer never carries stale MotionValues from a
+  // previous transition into its next appearance. Between edge changes the bag
+  // identity is stable, letting framer-motion bind values smoothly.
+  const layerStyles = useMemo<MotionStyle[]>(
+    () => sections.map(() => ({}) as MotionStyle),
+    // Recreate the bags on edge handoff to discard the prior transition's values.
+    [sections, activeEdge],
+  );
+  const layerBounds = useMemo<LayerBounds[]>(
+    () => sections.map(() => ({ width: 0, height: 0, top: 0, left: 0 })),
+    [sections],
+  );
+  const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  useLayerBounds(layerRefs, layerBounds);
+
+  const ActiveTransition = sections[activeEdge]?.transition ?? null;
+  const needsCopies = ActiveTransition && (ActiveTransition as TransitionComponent).copies === true;
+
+  // Local 0→1 progress across ONLY the animation window of the active edge.
+  // During the reading window it stays at 0, so the outgoing section is shown
+  // in full and static — then the transition plays across the remaining scroll.
+  const activeEdgeTiming = edges.list[activeEdge] ?? { start: 0, rest: restHeight, duration: heightPerSection, postRest: restHeight };
+  const localProgress = useTransform(progress, (p) => {
+    const offsetVh = p * edges.total;
+    const animLocal =
+      (offsetVh - activeEdgeTiming.start - activeEdgeTiming.rest) /
+      activeEdgeTiming.duration;
+    // Clamp: stays at 0 during rest, plays 0→1 during duration, holds at 1
+    // during postRest so the incoming section remains pinned and readable.
+    return animLocal < 0 ? 0 : animLocal > 1 ? 1 : animLocal;
+  });
+
+  const outgoing: LayerHandle = {
+    style: layerStyles[activeEdge],
+    bounds: layerBounds[activeEdge],
+    ...(needsCopies
+      ? {
+          render: () => (
+            <SectionShell className={sections[activeEdge].className}>
+              {sections[activeEdge].children}
+            </SectionShell>
+          ),
+        }
+      : {}),
+  };
+  const incoming: LayerHandle = {
+    style: layerStyles[activeEdge + 1],
+    bounds: layerBounds[activeEdge + 1],
+    ...(needsCopies
+      ? {
+          render: () => (
+            <SectionShell className={sections[activeEdge + 1].className}>
+              {sections[activeEdge + 1].children}
+            </SectionShell>
+          ),
+        }
+      : {}),
+  };
+
+  return (
+    <div ref={spineRef} style={{ height: `${totalHeight}vh` }} className="relative w-full">
+      <div ref={viewportRef} className="sticky top-0 h-screen w-full overflow-hidden">
+        {/* The active transition renders FIRST. Its hooks populate the shared
+            style bags before the layer elements below render and bind them. */}
+        {ActiveTransition && (
+          <ActiveTransition
+            progress={localProgress}
+            direction={direction}
+            viewport={viewport}
+            outgoing={outgoing}
+            incoming={incoming}
+          />
+        )}
+
+        {/* Persistent layers — each section mounted exactly once. The two
+            layers flanking the active edge are "live"; the rest are hidden so
+            the browser skips their paint. */}
+        {sections.map((s, idx) => {
+          const live = idx === activeEdge || idx === activeEdge + 1;
+          return (
+            <motion.div
+              key={s.key}
+              ref={(el) => {
+                layerRefs.current[idx] = el;
+              }}
+              style={layerStyles[idx]}
+              aria-hidden={!live || undefined}
+              className="absolute inset-0 h-full w-full"
+              data-sf-layer={idx}
+            >
+              <SectionShell className={s.className}>{s.children}</SectionShell>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Flow section — native browser scroll. No pinning, no transforms.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+function FlowSection({ section }: { section: ResolvedSection }) {
+  return (
+    <section className={section.className} data-sf-flow>
+      {section.children}
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Public API
+ * ──────────────────────────────────────────────────────────────────────── */
+
+export function SectionFlow({
+  children,
+  heightPerSection = 200,
+  restHeight = 100,
+  defaultTransition,
+  className = '',
+}: SectionFlowProps) {
+  const sections = useMemo<ResolvedSection[]>(() => {
+    const raw = Children.toArray(children).filter(isSectionElement);
+    return raw.map((el, idx) => {
+      const props = el.props;
+      const resolver: TransitionResolver | undefined =
+        props.transition ?? defaultTransition;
+      const transition = resolver ? resolveTransition(resolver) : null;
+      return {
+        key: el.key ?? `sf-${idx}`,
+        children: props.children,
+        className: props.className,
+        transition,
+      };
+    });
+  }, [children, defaultTransition]);
+
+  const segments = useMemo(() => buildSegments(sections), [sections]);
+
+  return (
+    <div className={`w-full ${className}`}>
+      {segments.map((seg, idx) =>
+        seg.kind === 'flow' ? (
+          <FlowSection key={`flow-${idx}`} section={seg.section} />
+        ) : (
+          <TransitionSpan
+            key={`span-${idx}`}
+            sections={seg.sections}
+            heightPerSection={heightPerSection}
+            restHeight={restHeight}
+          />
+        ),
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Section — marker component. Carries content + an optional outgoing
+ * transition. The __sf_section brand lets SectionFlow recognise it without
+ * fragile displayName checks.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+export function Section({ children, className }: SectionProps) {
+  return <SectionShell className={className}>{children}</SectionShell>;
+}
+(Section as unknown as { __sf_section: boolean }).__sf_section = true;
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ──────────────────────────────────────────────────────────────────────── */
+
+function SectionShell({
+  children,
+  className,
+}: {
+  children: SectionProps['children'];
+  className?: string;
+}) {
+  return <div className={`h-full w-full ${className ?? ''}`}>{children}</div>;
+}
+
+function useViewportSize(ref: React.RefObject<HTMLElement | null>): Viewport {
+  const [size, setSize] = useState<Viewport>({ width: 0, height: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () =>
+      setSize({ width: el.clientWidth, height: el.clientHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return size;
+}
+
+function useLayerBounds(
+  refs: React.MutableRefObject<(HTMLDivElement | null)[]>,
+  bounds: LayerBounds[],
+): void {
+  useEffect(() => {
+    const els = refs.current.filter(Boolean) as HTMLDivElement[];
+    if (!els.length) return;
+    const update = () => {
+      els.forEach((el, i) => {
+        if (!el || i >= bounds.length) return;
+        const r = el.getBoundingClientRect();
+        bounds[i] = { width: r.width, height: r.height, top: r.top, left: r.left };
+      });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    els.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [refs, bounds]);
+}

@@ -1,42 +1,168 @@
 ---
 title: API Reference
-description: The shared props and core primitives of SectionFlow.
+description: The v2 persistent-layer API for SectionFlow transitions.
 ---
 
-## SectionTransitionProps
+## `<SectionFlow>`
 
-Every transition component accepts:
+The root stage component. Groups consecutive `<Section>` children into **transition spans** (pinned viewports) and **flow sections** (native browser scroll).
+
+```tsx
+import { SectionFlow, Section } from '@/library/core/section-flow';
+```
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `first` | `ReactNode` | required | The outgoing section. Fills the screen when the track starts. |
-| `second` | `ReactNode` | required | The incoming section. Fills the screen when the track ends. |
-| `height` | `number` | `300` | Scroll track height in vh. Longer = slower transition. |
-| `className` | `string` | – | Extra classes for the track wrapper. |
+| `children` | `ReactNode` | required | `<Section>` elements. |
+| `heightPerSection` | `number` | `200` | Scroll distance (vh) for each transition's animation window. Longer = slower transition. |
+| `restHeight` | `number` | `100` | Global default for the viewing phase (vh) — reading window before animation begins. |
+| `defaultTransition` | `TransitionComponent \| string` | — | Fallback transition for sections that omit one. |
+| `className` | `string` | — | Extra classes for the wrapper. |
 
-## TransitionTrack
+## `<Section>`
 
-The shared sticky-track primitive for building your own transitions:
+A marker component. Carries content and an optional outgoing transition declaration. Sections are mounted once as persistent layers when inside a transition span, or as plain `<section>` elements for native scroll.
 
 ```tsx
-import { TransitionTrack, useTrackProgress } from '@/library/core/transition-track';
-import { motion, useTransform } from 'framer-motion';
+<Section transition={CardStack}>
+  <div className="h-full w-full">Your content</div>
+</Section>
+```
 
-function MyInner() {
-  const progress = useTrackProgress(); // spring-smoothed MotionValue 0→1
-  const opacity = useTransform(progress, [0, 1], [0, 1]);
-  return <motion.div style={{ opacity }} className="absolute inset-0" />;
-}
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | required | Section content. |
+| `transition` | `TransitionComponent \| string` | — | Outgoing transition — the handoff from this section to the next. Omit for native scroll. |
+| `className` | `string` | — | Extra classes on the section shell. |
 
-export function MyTransition() {
-  return (
-    <TransitionTrack height={300}>
-      <MyInner />
-    </TransitionTrack>
-  );
+## `TransitionProps`
+
+Every v2 transition component receives these props:
+
+```ts
+interface TransitionProps {
+  /** Local 0→1 progress across this edge's animation window. */
+  progress: MotionValue<number>;
+  /** Scroll direction across the edge. */
+  direction: TransitionDirection;
+  /** Pinned viewport size. */
+  viewport: Viewport;
+  /** Handle to the outgoing (current) layer. */
+  outgoing: LayerHandle;
+  /** Handle to the incoming (next) layer. */
+  incoming: LayerHandle;
 }
 ```
 
-## GSAP transitions
+## `LayerHandle`
 
-GSAP transitions register `ScrollTrigger` and build a scrubbed timeline inside `useLayoutEffect`, cleaning up with `gsap.context(...).revert()`. They expose the same `first` / `second` / `height` props.
+A handle to a once-mounted section layer. Transitions write motion values into the `style` bag, which the stage spreads onto the real layer element:
+
+```ts
+interface LayerHandle {
+  /** Bag of MotionValues the transition writes. */
+  style: MotionStyle;
+  /** Measured bounds of the layer. */
+  bounds: LayerBounds;
+  /** Optional renderer for transitions that need real content clones. */
+  render?: () => ReactElement;
+}
+```
+
+## `TransitionComponent`
+
+A transition is a component that receives `TransitionProps` and optionally declares static `timing` and `copies` fields:
+
+```tsx
+export function MyTransition({ progress, outgoing, incoming }: TransitionProps) {
+  const opacity = useTransform(progress, [0, 1], [1, 0]);
+  outgoing.style.opacity = opacity;
+  return null;
+}
+
+// Optional: override viewing-phase and animation-window duration (in vh)
+MyTransition.timing = { rest: 120, duration: 250 };
+
+// Optional: opt in to content cloning so the transition can render real copies
+MyTransition.copies = true;
+```
+
+The `timing` field lets a transition control how much scroll is allotted to its reading window (`rest`) and animation window (`duration`), overriding the stage's `restHeight` and `heightPerSection` defaults for that edge only. When `copies` is `true`, the stage exposes a `render()` method on each layer handle so the transition can produce real visual copies of the section content.
+
+## `transitionRegistry`
+
+Maps string slugs to transition components:
+
+```ts
+import { transitionRegistry } from '@/library/core/registry-v2';
+
+// Use in Section:
+<Section transition="card-stack">...</Section>
+
+// Resolve programmatically:
+const Component = transitionRegistry['card-stack'];
+```
+
+## `resolveTransition(resolver)`
+
+Resolves a `TransitionResolver` (string slug or component) to a `TransitionComponent | null`:
+
+```ts
+import { resolveTransition } from '@/library/core/registry-v2';
+
+const component = resolveTransition('circular-portal'); // TransitionComponent | null
+const component2 = resolveTransition(CircularPortal);  // TransitionComponent | null
+```
+
+## Transition shapes
+
+V2 transitions fall into three common patterns:
+
+### Mask reveal
+
+Writes a clip-path or mask onto the incoming layer:
+
+```tsx
+const clipPath = useMotionTemplate`circle(${radius}% at 50% 50%)`;
+incoming.style.clipPath = clipPath;
+```
+
+### Layer choreography
+
+Writes transforms onto both layers directly:
+
+```tsx
+outgoing.style.scale = outScale;
+incoming.style.y = y;
+```
+
+### Effect overlay
+
+Returns overlay elements (SVG, particles, shards) positioned above the layers:
+
+```tsx
+return (
+  <>
+    <motion.div aria-hidden style={{ ... }} className="absolute inset-0 z-20">
+      {/* Overlay content */}
+    </motion.div>
+  </>
+);
+```
+
+## Exported types
+
+```ts
+export type {
+  TransitionComponent,
+  TransitionResolver,
+  TransitionProps,
+  LayerHandle,
+  LayerBounds,
+  Viewport,
+  TransitionDirection,
+  TransitionTiming,
+  SectionProps,
+  SectionFlowProps,
+};
+```

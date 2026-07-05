@@ -3,34 +3,34 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /**
- * Reads the transition source from the project's library/transitions directory.
- * When the CLI is published, source files are bundled alongside the package.
- * Falls back to a placeholder if the file cannot be found.
+ * Reads a v2 transition's source. The canonical copies live in
+ * src/library/transitions-v2/ (dev) and are mirrored into packages/cli/transitions/
+ * by scripts/sync-sources.mjs when published. Both implement the v2 handle
+ * contract (TransitionProps with outgoing/incoming layer handles — no
+ * first/second wrapper).
  */
-export function getTransitionSource(slug, engine) {
-    // Paths to search (in priority order)
+export function getTransitionSource(slug, _engine) {
     const searchPaths = [
         // When running from inside the monorepo (dev/test)
-        path.resolve(__dirname, '../../../../src/library/transitions', `${slug}.tsx`),
-        // When installed as npm package (bundled files live next to dist/)
+        path.resolve(__dirname, '../../../../src/library/transitions-v2', `${slug}.tsx`),
+        // When installed as npm package (mirrored files live next to dist/)
         path.resolve(__dirname, '../../transitions', `${slug}.tsx`),
     ];
     for (const p of searchPaths) {
         if (fs.existsSync(p))
             return fs.readFileSync(p, 'utf8');
     }
-    // Minimal placeholder so the file is valid TypeScript
-    const importLine = engine === 'gsap'
-        ? `import gsap from 'gsap';\nimport { ScrollTrigger } from 'gsap/ScrollTrigger';`
-        : `import { motion, useTransform } from 'framer-motion';\nimport { TransitionTrack, useTrackProgress } from '../core/transition-track';`;
+    // Minimal placeholder matching the v2 handle contract so the file is valid.
     return [
         `'use client';`,
         `// TODO: source for ${slug} not found — re-run: npx sectionflow add ${slug}`,
-        importLine,
-        `import type { SectionTransitionProps } from '../core/types';`,
+        `import { useTransform } from 'framer-motion';`,
+        `import type { TransitionProps } from '../core/types';`,
         ``,
-        `export function ${toPascalCase(slug)}({ first, second, height, className }: SectionTransitionProps) {`,
-        `  return null; // replace with the full implementation`,
+        `export function ${toPascalCase(slug)}({ progress, outgoing, incoming }: TransitionProps) {`,
+        `  const opacity = useTransform(progress, [0, 1], [1, 0]);`,
+        `  outgoing.style.opacity = opacity;`,
+        `  return null;`,
         `}`,
     ].join('\n');
 }

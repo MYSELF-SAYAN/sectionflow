@@ -1,58 +1,26 @@
 export * from './core/types';
-export { TransitionTrack, useTrackProgress } from './core/transition-track';
+
+// ── v2 architecture (primary) ─────────────────────────────────────────────
+// Persistent layers + effect connectors. Sections are mounted once; transitions
+// are scroll-driven effects between two neighbours and never own content.
+export { SectionFlow, Section } from './core/section-flow';
+export { transitionRegistry, resolveTransition } from './core/registry-v2';
+export type {
+  TransitionComponent,
+  TransitionResolver,
+  TransitionProps,
+  TransitionTiming,
+  LayerHandle,
+  LayerBounds,
+  Viewport,
+  TransitionDirection,
+} from './core/types';
+
+// v2 transitions live in ./transitions-v2/* and are imported directly by name
+// (e.g. `import { CardStack } from 'sectionflow/library/transitions-v2/card-stack'`),
+// or resolved by slug through `transitionRegistry`. They are intentionally NOT
+// re-exported here so the public surface stays minimal.
+
+// ── Catalog metadata (docs / gallery) ──────────────────────────────────────
 export { transitions, availableTransitions } from './registry';
-export type { TransitionMeta, TransitionCategory, Engine } from './registry';
-
-export { WaveReveal } from './transitions/wave-reveal';
-export { CircularPortal } from './transitions/circular-portal';
-export { SpotlightReveal } from './transitions/spotlight-reveal';
-export { InkSpread } from './transitions/ink-spread';
-export { DiagonalWipe } from './transitions/diagonal-wipe';
-export { GradientBurn } from './transitions/gradient-burn';
-export { VerticalSplit } from './transitions/vertical-split';
-export { CurtainSplit } from './transitions/curtain-split';
-export { DiagonalSplit } from './transitions/diagonal-split';
-export { BlindsReveal } from './transitions/blinds-reveal';
-export { DotMatrixReveal } from './transitions/dot-matrix';
-export { CardStack } from './transitions/card-stack';
-export { PerspectiveFlip } from './transitions/perspective-flip';
-export { FoldReveal } from './transitions/fold-reveal';
-export { CinematicZoom } from './transitions/cinematic-zoom';
-export { DepthLayers } from './transitions/depth-layers';
-export { ZoomFade } from './transitions/zoom-fade';
-export { ElasticCurtain } from './transitions/elastic-curtain';
-export { ParallaxShift } from './transitions/parallax-shift';
-export { PinReveal } from './transitions/pin-reveal';
-export { ScrollWarp } from './transitions/scroll-warp';
-export { GsapPinWipe } from './transitions/gsap-pin-wipe';
-export { GsapStaggerWipe } from './transitions/gsap-stagger-wipe';
-
-// Previously planned — now available
-export { LiquidMorph } from './transitions/liquid-morph';
-export { MeshGradientMorph } from './transitions/mesh-gradient-morph';
-export { GlassDistortion } from './transitions/glass-distortion';
-export { RippleReveal } from './transitions/ripple-reveal';
-export { PaperTear } from './transitions/paper-tear';
-export { Shatter } from './transitions/shatter';
-export { HeroMorph } from './transitions/hero-morph';
-export { InfiniteTunnel } from './transitions/infinite-tunnel';
-export { SpatialWarp } from './transitions/spatial-warp';
-export { DynamicPortal } from './transitions/dynamic-portal';
-export { CameraFlythrough } from './transitions/camera-flythrough';
-export { ProgressiveMorph } from './transitions/progressive-morph';
-export { DirectionReveal } from './transitions/direction-reveal';
-export { MultiLayerScroll } from './transitions/multi-layer-scroll';
-export { ParticleExplosion } from './transitions/particle-explosion';
-export { ParticleAssembly } from './transitions/particle-assembly';
-export { OrbitingParticles } from './transitions/orbiting-particles';
-export { DustSimulation } from './transitions/dust-simulation';
-export { EnergyBurst } from './transitions/energy-burst';
-export { FloatingParticles } from './transitions/floating-particles';
-export { InteractiveParticles } from './transitions/interactive-particles';
-export { LensDistortion } from './transitions/lens-distortion';
-export { SvgShapeMorph } from './transitions/svg-shape-morph';
-export { PrismRefraction } from './transitions/prism-refraction';
-export { VolumetricLight } from './transitions/volumetric-light';
-export { StarfieldWarp } from './transitions/starfield-warp';
-export { PixelMelt } from './transitions/pixel-melt';
-export { PageBurn } from './transitions/page-burn';
+export type { TransitionMeta, TransitionCategory } from './registry';

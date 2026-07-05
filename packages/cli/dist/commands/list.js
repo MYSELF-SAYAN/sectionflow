@@ -9,7 +9,6 @@ const CATEGORY_ICONS = {
     'Scroll': '↕',
     'Particles': '✦',
     'Premium': '★',
-    'GSAP Powered': '⚡',
 };
 export async function listCommand() {
     intro(pc.bgCyan(pc.black(' sectionflow list ')));
@@ -20,9 +19,7 @@ export async function listCommand() {
         const icon = CATEGORY_ICONS[category] ?? '•';
         console.log(pc.bold(pc.white(`  ${icon} ${category}`)));
         for (const entry of entries) {
-            const engine = entry.engine === 'gsap'
-                ? pc.dim(pc.yellow('  gsap          '))
-                : pc.dim(pc.cyan('  framer-motion '));
+            const engine = pc.dim(pc.cyan('  framer-motion '));
             console.log(`    ${pc.white(entry.slug.padEnd(28))}${engine}${pc.dim(entry.title)}`);
             total++;
         }

@@ -3,11 +3,16 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick } from 'lucide-react';
-import { CardStack } from '@/library/transitions/card-stack';
-import { CircularPortal } from '@/library/transitions/circular-portal';
-import { VerticalSplit } from '@/library/transitions/vertical-split';
 import { transitions, availableTransitions } from '@/library/registry';
 import { SiteFooter } from '@/components/site-footer';
+import { SectionFlow, Section } from '@/library/core/section-flow';
+import { CardStack } from '@/library/transitions-v2/card-stack';
+import { CircularPortal } from '@/library/transitions-v2/circular-portal';
+import { InkSpread } from '@/library/transitions-v2/ink-spread';
+import { WaveReveal } from '@/library/transitions-v2/wave-reveal';
+import { VerticalSplit } from '@/library/transitions-v2/vertical-split';
+import { SvgShapeMorph } from '@/library/transitions-v2/svg-shape-morph';
+import { DiagonalSplit } from '@/library/transitions-v2/diagonal-split';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -16,9 +21,28 @@ export default function Home() {
     <div className="w-full bg-[#0b0b0e] text-[#fbfaf7] antialiased">
       <Nav />
       <Hero />
-      <CardStack first={<FeaturePanel />} second={<CategoriesPanel />} />
-      <CircularPortal first={<EnginePanel />} second={<StatsPanel />} />
-      <VerticalSplit first={<QuotePanel />} second={<CtaPanel />} />
+      <SectionFlow heightPerSection={100} restHeight={100}>
+        <Section transition={CardStack}>
+          <FeaturePanel />
+        </Section>
+        {/* No transition → native browser scroll for this section. */}
+        <Section>
+          <CategoriesPanel />
+        </Section>
+        <Section transition={CircularPortal}>
+          <EnginePanel />
+        </Section>
+        {/* No transition → native browser scroll for this section. */}
+        <Section>
+          <StatsPanel />
+        </Section>
+        <Section transition={VerticalSplit}>
+          <QuotePanel />
+        </Section>
+        <Section transition={WaveReveal}>
+          <CtaPanel />
+        </Section>
+      </SectionFlow>
       <SiteFooter />
     </div>
   );
@@ -93,7 +117,7 @@ function Hero() {
         transition={{ delay: 0.55, duration: 0.9, ease }}
         className="mt-8 max-w-xl text-center text-lg leading-relaxed text-white/60"
       >
-        Beautifully crafted, production-ready section transitions for modern React websites. Framer Motion first, GSAP when you need more.
+        Scroll-driven section transitions with persistent layers, viewing phases, and 60 FPS effects. Framer Motion first, GSAP when you need more.
       </motion.p>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -135,12 +159,12 @@ function Panel({ children, className }: { children: React.ReactNode; className?:
 }
 
 const features = [
-  { icon: Gauge, title: '60 FPS', body: 'Only compositor-friendly properties: transforms, opacity, clip-paths and masks.' },
-  { icon: Layers, title: 'Scroll-driven', body: 'Sticky tracks with spring-smoothed progress, just like the best Awwwards sites.' },
-  { icon: Boxes, title: 'Copy-paste', body: 'Each transition is one self-contained file with a consistent first/second API.' },
+  { icon: Gauge, title: '60 FPS', body: 'Only compositor-friendly properties: transforms, opacity, clip-paths and masks. Per-frame work stays on the GPU.' },
+  { icon: Layers, title: 'Persistent layers', body: 'Sections mount once as persistent layers. Transitions animate handles — never clone or re-render content.' },
+  { icon: Boxes, title: 'Viewing phase', body: 'Every transition reserves a reading window where sections sit fully static, so animation never competes with readability.' },
   { icon: Wand2, title: 'Two engines', body: 'Framer Motion by default. GSAP ScrollTrigger for staggered, multi-phase timelines.' },
-  { icon: Accessibility, title: 'Production ready', body: 'TypeScript, SSR compatible, mobile optimized and tuned spring physics.' },
-  { icon: MousePointerClick, title: 'Interactive', body: 'Velocity-reactive effects that respond to how fast you scroll.' },
+  { icon: Accessibility, title: 'Production ready', body: 'TypeScript, SSR compatible, mobile optimized, and tuned spring physics.' },
+  { icon: MousePointerClick, title: 'Velocity-reactive', body: 'Effects that respond to how fast you scroll, with per-transition timing overrides.' },
 ];
 
 function FeaturePanel() {
@@ -164,7 +188,7 @@ function FeaturePanel() {
 function CategoriesPanel() {
   const categories = [...new Set(transitions.map((t) => t.category))];
   return (
-    <Panel className="bg-gradient-to-br from-teal-950 via-slate-900 to-[#07111d] text-white">
+    <Panel className="bg-gradient-to-br from-teal-950 via-slate-900 to-[#07111d] text-white min-h-[300vh]">
       <span className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-white/40">The catalog</span>
       <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">{transitions.length} transitions. Seven families.</h2>
       <div className="mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-3">
@@ -187,7 +211,7 @@ function EnginePanel() {
       <span className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-black/40">Animation architecture</span>
       <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">Framer Motion first.<br />GSAP when it counts.</h2>
       <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-black/60">
-        Springs, motion values and a shared sticky-track core power most transitions. Multi-phase staggered choreography hands off to GSAP ScrollTrigger.
+        Springs, motion values and persistent-layer architecture power most transitions. Multi-phase staggered choreography hands off to GSAP ScrollTrigger.
       </p>
     </Panel>
   );

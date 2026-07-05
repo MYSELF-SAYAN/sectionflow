@@ -6,8 +6,8 @@ import { listCommand } from './commands/list.js';
 const program = new Command();
 program
     .name('sectionflow')
-    .description('Add scroll-driven section transitions to your React project')
-    .version('0.1.0');
+    .description('Add scroll-driven section transitions to your React project (v2 persistent-layer architecture)')
+    .version('0.2.0');
 program
     .command('init')
     .description('Initialize SectionFlow in your project — installs core files')

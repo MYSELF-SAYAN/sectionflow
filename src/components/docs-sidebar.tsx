@@ -8,8 +8,9 @@ import { transitions, type TransitionMeta } from '@/library/registry';
 
 const docsSections = [
   { href: '/docs', label: 'Overview' },
-  { href: '/docs/installation', label: 'Getting Started' },
+  { href: '/docs/installation', label: 'Installation' },
   { href: '/docs/api', label: 'API Reference' },
+  { href: '/docs/migration', label: 'Migration Guide' },
   { href: '/docs/templates', label: 'Templates' },
 ];
 

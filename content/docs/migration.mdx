@@ -1,0 +1,196 @@
+---
+title: Migration Guide
+description: Migrate from the legacy first/second wrapper API to the v2 persistent-layer architecture.
+---
+
+## Overview
+
+The v2 architecture replaces the old `first`/`second` wrapper pattern with a **persistent-layer + effect connector** model. In the old API, each transition was a standalone component that owned and rendered both the outgoing and incoming sections. In v2, sections are mounted once as persistent layers and transitions are scroll-driven effects that animate between them.
+
+### Key changes
+
+| Old (v1) | New (v2) |
+| --- | --- |
+| `first` / `second` props | `progress` / `outgoing` / `incoming` handles |
+| Each transition wraps its own content | `<SectionFlow>` manages all layers centrally |
+| Sections rendered twice (as `second` then `first`) | Sections mounted once as persistent layers |
+| `TransitionTrack` + `useTrackProgress` | `SectionFlow` + `TransitionProps.progress` |
+| `height` prop per transition | `heightPerSection` + `restHeight` on stage |
+| One transition per block | Chain multiple sections in one `<SectionFlow>` |
+| No viewing phase guarantee | Built-in viewing phase with per-transition overrides |
+
+## Step-by-step migration
+
+### 1. Replace TransitionTrack with SectionFlow
+
+**Before:**
+
+```tsx
+<CardStack
+  height={300}
+  first={<HeroSection />}
+  second={<AboutSection />}
+/>
+```
+
+**After:**
+
+```tsx
+<SectionFlow heightPerSection={200} restHeight={100}>
+  <Section transition={CardStack}>
+    <HeroSection />
+  </Section>
+  <Section>
+    <AboutSection />
+  </Section>
+</SectionFlow>
+```
+
+### 2. Update the props interface
+
+**Before:**
+
+```tsx
+interface SectionTransitionProps {
+  first: ReactNode;
+  second: ReactNode;
+  height?: number;
+}
+```
+
+**After:**
+
+```tsx
+// Your transition receives these from SectionFlow automatically:
+interface TransitionProps {
+  progress: MotionValue<number>;
+  direction: TransitionDirection;
+  viewport: Viewport;
+  outgoing: LayerHandle;  // write transforms here
+  incoming: LayerHandle;  // write transforms here
+}
+```
+
+### 3. Rewrite the transition component
+
+**Before (wrapper pattern):**
+
+```tsx
+export function CardStack({ first, second, height = 300 }: SectionTransitionProps) {
+  return (
+    <TransitionTrack height={height}>
+      <Inner first={first} second={second} />
+    </TransitionTrack>
+  );
+}
+
+function Inner({ first, second }: { first: ReactNode; second: ReactNode }) {
+  const progress = useTrackProgress();
+  const scale = useTransform(progress, [0, 1], [1, 0.88]);
+  return (
+    <>
+      <motion.div style={{ scale }} className="absolute inset-0">{first}</motion.div>
+      <motion.div className="absolute inset-0">{second}</motion.div>
+    </>
+  );
+}
+```
+
+**After (handle pattern):**
+
+```tsx
+export function CardStack({ progress, outgoing, incoming }: TransitionProps) {
+  const scale = useTransform(progress, [0, 1], [1, 0.88]);
+  const radius = useTransform(progress, [0, 1], [0, 36]);
+  const brightness = useTransform(progress, [0, 1], [1, 0.45]);
+  const filter = useMotionTemplate`brightness(${brightness})`;
+
+  const y = useTransform(progress, [0, 1], ['102%', '0%']);
+  const inRadius = useTransform(progress, [0, 1], [44, 0]);
+
+  outgoing.style.scale = scale;
+  outgoing.style.borderRadius = radius;
+  outgoing.style.filter = filter;
+
+  incoming.style.y = y;
+  incoming.style.borderTopLeftRadius = inRadius;
+  incoming.style.borderTopRightRadius = inRadius;
+  incoming.style.boxShadow = '0 -40px 120px rgba(0,0,0,0.5)';
+
+  return null;
+}
+```
+
+### 4. Chain multiple transitions
+
+**Before** — sections rendered multiple times:
+
+```tsx
+<main>
+  <HeroSection />
+  <WaveReveal first={<HeroSection />} second={<AboutSection />} />
+  <CardStack first={<AboutSection />} second={<WorkSection />} />
+  <WorkSection />
+</main>
+```
+
+**After** — sections declared once, native-scroll between spans:
+
+```tsx
+<main>
+  {/* Native scroll */}
+  <HeroSection />
+
+  <SectionFlow heightPerSection={200} restHeight={100}>
+    <Section transition={WaveReveal}>
+      <HeroSection />
+    </Section>
+    <Section transition={CardStack}>
+      <AboutSection />
+    </Section>
+    {/* Native scroll — no transition declared */}
+    <Section>
+      <WorkSection />
+    </Section>
+  </SectionFlow>
+
+  {/* Native scroll */}
+  <WorkSection />
+</main>
+```
+
+### 5. Optional: add viewing-phase overrides
+
+```tsx
+export function CinematicPortal({ progress, outgoing, incoming }: TransitionProps) {
+  // ... transition logic
+  return null;
+}
+
+// Give this transition a larger reading window and slower animation
+CinematicPortal.timing = { rest: 150, duration: 300 };
+```
+
+## Timing prop mapping
+
+| Old | New | Notes |
+| --- | --- | --- |
+| `height={300}` on transition | `heightPerSection={200}` on SectionFlow | Controls animation window only |
+| — | `restHeight={100}` on SectionFlow | New: controls viewing phase |
+| — | `timing: { rest: 120, duration: 250 }` on transition | Per-edge override |
+
+## What's removed
+
+- `TransitionTrack` component — replaced by `SectionFlow`
+- `useTrackProgress()` hook — replaced by `TransitionProps.progress`
+- `SectionTransitionProps` interface — replaced by `TransitionProps`
+- `first` / `second` props — replaced by `outgoing` / `incoming` handles
+- Per-transition `height` prop — replaced by stage-level `heightPerSection`
+
+## What's gained
+
+- **No content cloning** — each section is mounted once
+- **Viewing phase** — guaranteed reading window before every transition
+- **Flexible chains** — mix native-scroll and pinned sections in one flow
+- **Per-transition timing** — fine-tune rest and duration per edge
+- **Better performance** — per-frame work stays on the compositor; React re-renders only on edge changes
