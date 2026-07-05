@@ -30,7 +30,7 @@ const ROOT = path.resolve(__dirname, '..', '..', '..');
 const CLI = path.resolve(__dirname, '..');
 
 const CORE_DIR = path.join(ROOT, 'src', 'library', 'core');
-const TRANSITIONS_DIR = path.join(ROOT, 'src', 'library', 'transitions-v2');
+const TRANSITIONS_DIR = path.join(ROOT, 'src', 'library', 'transitions');
 
 const GENERATED_DIR = path.join(CLI, 'src', 'generated');
 const GENERATED_FILE = path.join(GENERATED_DIR, 'core-sources.ts');
@@ -163,7 +163,7 @@ async function main() {
   const typesRaw = await read(path.join(CORE_DIR, 'types.ts'));
   const sectionFlowRaw = (await read(path.join(CORE_DIR, 'section-flow.tsx')))
     .replace(/'\.\/registry-v2'/g, "'./registry'");
-  const registryRaw = await read(path.join(CORE_DIR, 'registry-v2.ts'));
+  const registryRaw = await read(path.join(CORE_DIR, 'registry.ts'));
 
   // 2. Build the registry skeleton + timing map.
   const skeleton = buildSkeleton(registryRaw);

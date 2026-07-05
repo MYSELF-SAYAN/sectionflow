@@ -6,13 +6,13 @@ import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, Mous
 import { transitions, availableTransitions } from '@/library/registry';
 import { SiteFooter } from '@/components/site-footer';
 import { SectionFlow, Section } from '@/library/core/section-flow';
-import { CardStack } from '@/library/transitions-v2/card-stack';
-import { CircularPortal } from '@/library/transitions-v2/circular-portal';
-import { InkSpread } from '@/library/transitions-v2/ink-spread';
-import { WaveReveal } from '@/library/transitions-v2/wave-reveal';
-import { VerticalSplit } from '@/library/transitions-v2/vertical-split';
-import { SvgShapeMorph } from '@/library/transitions-v2/svg-shape-morph';
-import { DiagonalSplit } from '@/library/transitions-v2/diagonal-split';
+import { CardStack } from '@/library/transitions/card-stack';
+import { CircularPortal } from '@/library/transitions/circular-portal';
+import { InkSpread } from '@/library/transitions/ink-spread';
+import { WaveReveal } from '@/library/transitions/wave-reveal';
+import { VerticalSplit } from '@/library/transitions/vertical-split';
+import { SvgShapeMorph } from '@/library/transitions/svg-shape-morph';
+import { DiagonalSplit } from '@/library/transitions/diagonal-split';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 

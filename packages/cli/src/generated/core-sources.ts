@@ -303,14 +303,6 @@ function TransitionSpan({
   const edgeCount = Math.max(1, sections.length - 1);
 
   // ── Per-edge timing table ────────────────────────────────────────────────
-  // Each edge e owns three phases:
-  //   1. rest    – reading window before the transition (outgoing section visible).
-  //   2. duration – animation window over which the handoff plays.
-  //   3. postRest – reading window after the transition (incoming section visible).
-  // The incoming section stays pinned and fully legible during postRest, giving
-  // viewers time to absorb the content before native scrolling resumes.
-  // A transition may override rest/duration via its static \`timing\` field.
-  // postRest defaults to the same value as restHeight.
   const edges = useMemo(() => {
     const list: { rest: number; duration: number; postRest: number; span: number; start: number }[] = [];
     let cursor = 0;
@@ -328,8 +320,7 @@ function TransitionSpan({
 
   const totalHeight = edges.total;
 
-  // Which edge is active? Derived from absolute scroll offset against the
-  // cumulative boundary table so each edge's per-transition rest zone holds.
+  // Which edge is active? Derived from absolute scroll offset.
   const [activeEdge, setActiveEdge] = useState(0);
   const [direction, setDirection] = useState<TransitionDirection>('forward');
   useMotionValueEvent(progress, 'change', (p) => {
@@ -349,15 +340,32 @@ function TransitionSpan({
 
   const viewport = useViewportSize(viewportRef);
 
-  // One persistent style bag per layer. The bags are recreated whenever the
-  // active edge changes, so a layer never carries stale MotionValues from a
-  // previous transition into its next appearance. Between edge changes the bag
-  // identity is stable, letting framer-motion bind values smoothly.
-  const layerStyles = useMemo<MotionStyle[]>(
-    () => sections.map(() => ({}) as MotionStyle),
-    // Recreate the bags on edge handoff to discard the prior transition's values.
-    [sections, activeEdge],
+  // ── Style bags ───────────────────────────────────────────────────────────
+  // Stable refs that persist across renders. We clear them when the active
+  // edge changes instead of recreating with useMemo, which avoids breaking
+  // framer-motion's MotionValue binding mid-animation.
+  const layerStylesRef = useRef<MotionStyle[]>(
+    sections.map(() => ({}) as MotionStyle),
   );
+  // Keep array length in sync with sections.
+  if (layerStylesRef.current.length !== sections.length) {
+    layerStylesRef.current = sections.map(() => ({}) as MotionStyle);
+  }
+  // Track previous active edge to know when to clear bags.
+  const prevEdgeRef = useRef(activeEdge);
+  if (prevEdgeRef.current !== activeEdge) {
+    // Clear ALL bags so no stale MotionValues from the previous transition
+    // leak into a layer's next appearance.
+    for (let i = 0; i < layerStylesRef.current.length; i++) {
+      const bag = layerStylesRef.current[i];
+      for (const key of Object.keys(bag)) {
+        delete (bag as Record<string, unknown>)[key];
+      }
+    }
+    prevEdgeRef.current = activeEdge;
+  }
+  const layerStyles = layerStylesRef.current;
+
   const layerBounds = useMemo<LayerBounds[]>(
     () => sections.map(() => ({ width: 0, height: 0, top: 0, left: 0 })),
     [sections],
@@ -369,16 +377,12 @@ function TransitionSpan({
   const needsCopies = ActiveTransition && (ActiveTransition as TransitionComponent).copies === true;
 
   // Local 0→1 progress across ONLY the animation window of the active edge.
-  // During the reading window it stays at 0, so the outgoing section is shown
-  // in full and static — then the transition plays across the remaining scroll.
   const activeEdgeTiming = edges.list[activeEdge] ?? { start: 0, rest: restHeight, duration: heightPerSection, postRest: restHeight };
   const localProgress = useTransform(progress, (p) => {
     const offsetVh = p * edges.total;
     const animLocal =
       (offsetVh - activeEdgeTiming.start - activeEdgeTiming.rest) /
       activeEdgeTiming.duration;
-    // Clamp: stays at 0 during rest, plays 0→1 during duration, holds at 1
-    // during postRest so the incoming section remains pinned and readable.
     return animLocal < 0 ? 0 : animLocal > 1 ? 1 : animLocal;
   });
 
@@ -425,17 +429,28 @@ function TransitionSpan({
         )}
 
         {/* Persistent layers — each section mounted exactly once. The two
-            layers flanking the active edge are "live"; the rest are hidden so
-            the browser skips their paint. */}
+            layers flanking the active edge are "live"; the rest are hidden.
+            Z-index ensures outgoing (activeEdge) is BEHIND incoming
+            (activeEdge+1), and all other layers are buried at z-0. */}
         {sections.map((s, idx) => {
-          const live = idx === activeEdge || idx === activeEdge + 1;
+          const isOutgoing = idx === activeEdge;
+          const isIncoming = idx === activeEdge + 1;
+          const live = isOutgoing || isIncoming;
+
+          // Write z-index and visibility into the style bag so they coexist
+          // with the transition's MotionValues on the same object reference.
+          const bag = layerStyles[idx];
+          (bag as Record<string, unknown>).zIndex = isIncoming ? 2 : isOutgoing ? 1 : 0;
+          (bag as Record<string, unknown>).visibility = live ? 'visible' : 'hidden';
+          (bag as Record<string, unknown>).pointerEvents = live ? 'auto' : 'none';
+
           return (
             <motion.div
               key={s.key}
               ref={(el) => {
                 layerRefs.current[idx] = el;
               }}
-              style={layerStyles[idx]}
+              style={bag}
               aria-hidden={!live || undefined}
               className="absolute inset-0 h-full w-full"
               data-sf-layer={idx}
@@ -593,13 +608,74 @@ import type { TransitionComponent, TransitionResolver } from './types';
  * ──────────────────────────────────────────────────────────────────────── */
 
 // ── Mask reveal ────────────────────────────────────────────────────────────
+import { CircularPortal } from '../transitions/circular-portal';
+import { SpotlightReveal } from '../transitions/spotlight-reveal';
+import { InkSpread } from '../transitions/ink-spread';
+import { DotMatrixReveal } from '../transitions/dot-matrix';
+import { BlindsReveal } from '../transitions/blinds-reveal';
+import { LiquidMorph } from '../transitions/liquid-morph';
+import { MeshGradientMorph } from '../transitions/mesh-gradient-morph';
+import { GlassDistortion } from '../transitions/glass-distortion';
+import { RippleReveal } from '../transitions/ripple-reveal';
+import { DynamicMaskReveal } from '../transitions/diagonal-wipe';
+import { GradientBurn } from '../transitions/gradient-burn';
+import { SvgShapeMorph } from '../transitions/svg-shape-morph';
 
 // ── Split & fragment ───────────────────────────────────────────────────────
+import { CurtainSplit } from '../transitions/curtain-split';
+import { VerticalSplit } from '../transitions/vertical-split';
+import { DiagonalSplit } from '../transitions/diagonal-split';
+import { Shatter } from '../transitions/shatter';
+import { PaperTear } from '../transitions/paper-tear';
+import { CrystalShatter } from '../transitions/crystal-shatter';
+import { ThunderCrack } from '../transitions/thunder-crack';
+import { PanelPass } from '../transitions/panel-pass';
 // ── 3D / perspective ───────────────────────────────────────────────────────
+import { CardStack } from '../transitions/card-stack';
+import { PerspectiveFlip } from '../transitions/perspective-flip';
+import { FoldReveal } from '../transitions/fold-reveal';
+import { CinematicZoom } from '../transitions/cinematic-zoom';
+import { DepthLayers } from '../transitions/depth-layers';
+import { HeroMorph } from '../transitions/hero-morph';
+import { InfiniteTunnel } from '../transitions/infinite-tunnel';
+import { SpatialWarp } from '../transitions/spatial-warp';
+import { DynamicPortal } from '../transitions/dynamic-portal';
+import { CameraFlythrough } from '../transitions/camera-flythrough';
+import { NeonCorridor } from '../transitions/neon-corridor';
+import { StarfieldWarp } from '../transitions/starfield-warp';
 
 // ── Scroll ─────────────────────────────────────────────────────────────────
+import { WaveReveal } from '../transitions/wave-reveal';
+import { ZoomFade } from '../transitions/zoom-fade';
+import { ElasticCurtain } from '../transitions/elastic-curtain';
+import { ParallaxShift } from '../transitions/parallax-shift';
+import { PinReveal } from '../transitions/pin-reveal';
+import { ScrollWarp } from '../transitions/scroll-warp';
+import { ProgressiveMorph } from '../transitions/progressive-morph';
+import { DirectionReveal } from '../transitions/direction-reveal';
+import { MultiLayerScroll } from '../transitions/multi-layer-scroll';
+import { MagneticPull } from '../transitions/magnetic-pull';
 
 // ── Particles / premium ────────────────────────────────────────────────────
+import { ParticleExplosion } from '../transitions/particle-explosion';
+import { ParticleAssembly } from '../transitions/particle-assembly';
+import { ParticleDissolve } from '../transitions/particle-dissolve';
+import { OrbitingParticles } from '../transitions/orbiting-particles';
+import { ThanosSnap } from '../transitions/thanos-snap';
+import { DustSimulation } from '../transitions/dust-simulation';
+import { EnergyBurst } from '../transitions/energy-burst';
+import { FloatingParticles } from '../transitions/floating-particles';
+import { InteractiveParticles } from '../transitions/interactive-particles';
+import { ClothReveal } from '../transitions/cloth-reveal';
+import { LensDistortion } from '../transitions/lens-distortion';
+import { PrismRefraction } from '../transitions/prism-refraction';
+import { VolumetricLight } from '../transitions/volumetric-light';
+import { PageBurn } from '../transitions/page-burn';
+import { PixelMelt } from '../transitions/pixel-melt';
+import { AuroraDrift } from '../transitions/aurora-drift';
+import { HolographicGlitch } from '../transitions/holographic-glitch';
+import { MoltenPour } from '../transitions/molten-pour';
+import { BlackHole } from '../transitions/black-hole';
 
 /**
  * Viewing-phase profiles. Mask reveals and content-heavy handoffs benefit from

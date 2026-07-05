@@ -4,7 +4,7 @@ export * from './core/types';
 // Persistent layers + effect connectors. Sections are mounted once; transitions
 // are scroll-driven effects between two neighbours and never own content.
 export { SectionFlow, Section } from './core/section-flow';
-export { transitionRegistry, resolveTransition } from './core/registry-v2';
+export { transitionRegistry, resolveTransition } from './core/registry';
 export type {
   TransitionComponent,
   TransitionResolver,

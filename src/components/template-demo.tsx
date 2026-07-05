@@ -1,7 +1,7 @@
 'use client';
 
 import { SectionFlow, Section } from '@/library/core/section-flow';
-import { transitionRegistry } from '@/library/core/registry-v2';
+import { transitionRegistry } from '@/library/core/registry';
 import { DemoSection } from '@/library/demo/demo-section';
 
 /**

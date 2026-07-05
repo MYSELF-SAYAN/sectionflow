@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { cache } from 'react';
 import { transitions, type TransitionMeta } from '@/library/registry';
-import { transitionRegistry } from '@/library/core/registry-v2';
+import { transitionRegistry } from '@/library/core/registry';
 import { codeToHtml } from 'shiki';
 
 export const transitionGroups = ['Wave', 'SVG', 'Perspective', 'Scroll', 'Grid', 'Morph', 'Parallax', 'Other'] as const;
@@ -279,14 +279,6 @@ function TransitionSpan({
   const edgeCount = Math.max(1, sections.length - 1);
 
   // ── Per-edge timing table ────────────────────────────────────────────────
-  // Each edge e owns three phases:
-  //   1. rest    – reading window before the transition (outgoing section visible).
-  //   2. duration – animation window over which the handoff plays.
-  //   3. postRest – reading window after the transition (incoming section visible).
-  // The incoming section stays pinned and fully legible during postRest, giving
-  // viewers time to absorb the content before native scrolling resumes.
-  // A transition may override rest/duration via its static \`timing\` field.
-  // postRest defaults to the same value as restHeight.
   const edges = useMemo(() => {
     const list: { rest: number; duration: number; postRest: number; span: number; start: number }[] = [];
     let cursor = 0;
@@ -304,8 +296,7 @@ function TransitionSpan({
 
   const totalHeight = edges.total;
 
-  // Which edge is active? Derived from absolute scroll offset against the
-  // cumulative boundary table so each edge's per-transition rest zone holds.
+  // Which edge is active? Derived from absolute scroll offset.
   const [activeEdge, setActiveEdge] = useState(0);
   const [direction, setDirection] = useState<TransitionDirection>('forward');
   useMotionValueEvent(progress, 'change', (p) => {
@@ -325,15 +316,32 @@ function TransitionSpan({
 
   const viewport = useViewportSize(viewportRef);
 
-  // One persistent style bag per layer. The bags are recreated whenever the
-  // active edge changes, so a layer never carries stale MotionValues from a
-  // previous transition into its next appearance. Between edge changes the bag
-  // identity is stable, letting framer-motion bind values smoothly.
-  const layerStyles = useMemo<MotionStyle[]>(
-    () => sections.map(() => ({}) as MotionStyle),
-    // Recreate the bags on edge handoff to discard the prior transition's values.
-    [sections, activeEdge],
+  // ── Style bags ───────────────────────────────────────────────────────────
+  // Stable refs that persist across renders. We clear them when the active
+  // edge changes instead of recreating with useMemo, which avoids breaking
+  // framer-motion's MotionValue binding mid-animation.
+  const layerStylesRef = useRef<MotionStyle[]>(
+    sections.map(() => ({}) as MotionStyle),
   );
+  // Keep array length in sync with sections.
+  if (layerStylesRef.current.length !== sections.length) {
+    layerStylesRef.current = sections.map(() => ({}) as MotionStyle);
+  }
+  // Track previous active edge to know when to clear bags.
+  const prevEdgeRef = useRef(activeEdge);
+  if (prevEdgeRef.current !== activeEdge) {
+    // Clear ALL bags so no stale MotionValues from the previous transition
+    // leak into a layer's next appearance.
+    for (let i = 0; i < layerStylesRef.current.length; i++) {
+      const bag = layerStylesRef.current[i];
+      for (const key of Object.keys(bag)) {
+        delete (bag as Record<string, unknown>)[key];
+      }
+    }
+    prevEdgeRef.current = activeEdge;
+  }
+  const layerStyles = layerStylesRef.current;
+
   const layerBounds = useMemo<LayerBounds[]>(
     () => sections.map(() => ({ width: 0, height: 0, top: 0, left: 0 })),
     [sections],
@@ -345,16 +353,12 @@ function TransitionSpan({
   const needsCopies = ActiveTransition && (ActiveTransition as TransitionComponent).copies === true;
 
   // Local 0→1 progress across ONLY the animation window of the active edge.
-  // During the reading window it stays at 0, so the outgoing section is shown
-  // in full and static — then the transition plays across the remaining scroll.
   const activeEdgeTiming = edges.list[activeEdge] ?? { start: 0, rest: restHeight, duration: heightPerSection, postRest: restHeight };
   const localProgress = useTransform(progress, (p) => {
     const offsetVh = p * edges.total;
     const animLocal =
       (offsetVh - activeEdgeTiming.start - activeEdgeTiming.rest) /
       activeEdgeTiming.duration;
-    // Clamp: stays at 0 during rest, plays 0→1 during duration, holds at 1
-    // during postRest so the incoming section remains pinned and readable.
     return animLocal < 0 ? 0 : animLocal > 1 ? 1 : animLocal;
   });
 
@@ -401,17 +405,28 @@ function TransitionSpan({
         )}
 
         {/* Persistent layers — each section mounted exactly once. The two
-            layers flanking the active edge are "live"; the rest are hidden so
-            the browser skips their paint. */}
+            layers flanking the active edge are "live"; the rest are hidden.
+            Z-index ensures outgoing (activeEdge) is BEHIND incoming
+            (activeEdge+1), and all other layers are buried at z-0. */}
         {sections.map((s, idx) => {
-          const live = idx === activeEdge || idx === activeEdge + 1;
+          const isOutgoing = idx === activeEdge;
+          const isIncoming = idx === activeEdge + 1;
+          const live = isOutgoing || isIncoming;
+
+          // Write z-index and visibility into the style bag so they coexist
+          // with the transition's MotionValues on the same object reference.
+          const bag = layerStyles[idx];
+          (bag as Record<string, unknown>).zIndex = isIncoming ? 2 : isOutgoing ? 1 : 0;
+          (bag as Record<string, unknown>).visibility = live ? 'visible' : 'hidden';
+          (bag as Record<string, unknown>).pointerEvents = live ? 'auto' : 'none';
+
           return (
             <motion.div
               key={s.key}
               ref={(el) => {
                 layerRefs.current[idx] = el;
               }}
-              style={layerStyles[idx]}
+              style={bag}
               aria-hidden={!live || undefined}
               className="absolute inset-0 h-full w-full"
               data-sf-layer={idx}
@@ -588,7 +603,7 @@ export const getCoreFiles = cache(async (): Promise<CoreFile[]> => {
   return [
     { filename: 'src/library/core/types.ts', language: 'ts', source: TYPES_SOURCE, html: typesHtml },
     { filename: 'src/library/core/section-flow.tsx', language: 'tsx', source: SECTION_FLOW_SOURCE, html: flowHtml },
-    { filename: 'src/library/core/registry-v2.ts', language: 'tsx', source: REGISTRY_SOURCE, html: registryHtml },
+    { filename: 'src/library/core/registry.ts', language: 'tsx', source: REGISTRY_SOURCE, html: registryHtml },
   ];
 });
 
@@ -621,10 +636,10 @@ function buildUsageCode(meta: TransitionMeta): string {
 
 import { SectionFlow, Section } from '@/library/core/section-flow';
 ${isV2
-    ? `import { ${componentName} } from '@/library/transitions-v2/${meta.slug}';`
-    : `// Import from transitions/ (legacy) until v2 migration is complete
+      ? `import { ${componentName} } from '@/library/transitions-v2/${meta.slug}';`
+      : `// Import from transitions/ (legacy) until v2 migration is complete
 // import { ${componentName} } from '@/library/transitions/${meta.slug}';`
-  }
+    }
 
 // ─── Section content ─────────────────────────────────────────────────────────
 
