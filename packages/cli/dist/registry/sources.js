@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function getTransitionSource(slug, _engine) {
     const searchPaths = [
         // When running from inside the monorepo (dev/test)
-        path.resolve(__dirname, '../../../../src/library/transitions-v2', `${slug}.tsx`),
+        path.resolve(__dirname, '../../../../src/library/transitions', `${slug}.tsx`),
         // When installed as npm package (mirrored files live next to dist/)
         path.resolve(__dirname, '../../transitions', `${slug}.tsx`),
     ];

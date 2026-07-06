@@ -74,7 +74,7 @@ function buildSkeleton(raw) {
 
   for (const line of lines) {
     // ── drop transition imports ──
-    if (/^import\s+\{[^}]+\}\s+from\s+'\.\.\/transitions-v2\//.test(line)) {
+    if (/^import\s+\{[^}]+\}\s+from\s+'\.\.\/transitions\//.test(line)) {
       continue;
     }
 
@@ -161,8 +161,7 @@ async function main() {
 
   // 1. Read canonical core files.
   const typesRaw = await read(path.join(CORE_DIR, 'types.ts'));
-  const sectionFlowRaw = (await read(path.join(CORE_DIR, 'section-flow.tsx')))
-    .replace(/'\.\/registry-v2'/g, "'./registry'");
+  const sectionFlowRaw = await read(path.join(CORE_DIR, 'section-flow.tsx'));
   const registryRaw = await read(path.join(CORE_DIR, 'registry.ts'));
 
   // 2. Build the registry skeleton + timing map.

@@ -543,7 +543,7 @@ function SectionShell({
   children: SectionProps['children'];
   className?: string;
 }) {
-  return <div className={\`h-full w-full \${className ?? ''}\`}>{children}</div>;
+  return <div className={\`h-full w-full pointer-events-auto \${className ?? ''}\`}>{children}</div>;
 }
 
 function useViewportSize(ref: React.RefObject<HTMLElement | null>): Viewport {
@@ -605,74 +605,13 @@ import type { TransitionComponent, TransitionResolver } from './types';
  * ──────────────────────────────────────────────────────────────────────── */
 
 // ── Mask reveal ────────────────────────────────────────────────────────────
-import { CircularPortal } from '../transitions/circular-portal';
-import { SpotlightReveal } from '../transitions/spotlight-reveal';
-import { InkSpread } from '../transitions/ink-spread';
-import { DotMatrixReveal } from '../transitions/dot-matrix';
-import { BlindsReveal } from '../transitions/blinds-reveal';
-import { LiquidMorph } from '../transitions/liquid-morph';
-import { MeshGradientMorph } from '../transitions/mesh-gradient-morph';
-import { GlassDistortion } from '../transitions/glass-distortion';
-import { RippleReveal } from '../transitions/ripple-reveal';
-import { DynamicMaskReveal } from '../transitions/diagonal-wipe';
-import { GradientBurn } from '../transitions/gradient-burn';
-import { SvgShapeMorph } from '../transitions/svg-shape-morph';
 
 // ── Split & fragment ───────────────────────────────────────────────────────
-import { CurtainSplit } from '../transitions/curtain-split';
-import { VerticalSplit } from '../transitions/vertical-split';
-import { DiagonalSplit } from '../transitions/diagonal-split';
-import { Shatter } from '../transitions/shatter';
-import { PaperTear } from '../transitions/paper-tear';
-import { CrystalShatter } from '../transitions/crystal-shatter';
-import { ThunderCrack } from '../transitions/thunder-crack';
-import { PanelPass } from '../transitions/panel-pass';
 // ── 3D / perspective ───────────────────────────────────────────────────────
-import { CardStack } from '../transitions/card-stack';
-import { PerspectiveFlip } from '../transitions/perspective-flip';
-import { FoldReveal } from '../transitions/fold-reveal';
-import { CinematicZoom } from '../transitions/cinematic-zoom';
-import { DepthLayers } from '../transitions/depth-layers';
-import { HeroMorph } from '../transitions/hero-morph';
-import { InfiniteTunnel } from '../transitions/infinite-tunnel';
-import { SpatialWarp } from '../transitions/spatial-warp';
-import { DynamicPortal } from '../transitions/dynamic-portal';
-import { CameraFlythrough } from '../transitions/camera-flythrough';
-import { NeonCorridor } from '../transitions/neon-corridor';
-import { StarfieldWarp } from '../transitions/starfield-warp';
 
 // ── Scroll ─────────────────────────────────────────────────────────────────
-import { WaveReveal } from '../transitions/wave-reveal';
-import { ZoomFade } from '../transitions/zoom-fade';
-import { ElasticCurtain } from '../transitions/elastic-curtain';
-import { ParallaxShift } from '../transitions/parallax-shift';
-import { PinReveal } from '../transitions/pin-reveal';
-import { ScrollWarp } from '../transitions/scroll-warp';
-import { ProgressiveMorph } from '../transitions/progressive-morph';
-import { DirectionReveal } from '../transitions/direction-reveal';
-import { MultiLayerScroll } from '../transitions/multi-layer-scroll';
-import { MagneticPull } from '../transitions/magnetic-pull';
 
 // ── Particles / premium ────────────────────────────────────────────────────
-import { ParticleExplosion } from '../transitions/particle-explosion';
-import { ParticleAssembly } from '../transitions/particle-assembly';
-import { ParticleDissolve } from '../transitions/particle-dissolve';
-import { OrbitingParticles } from '../transitions/orbiting-particles';
-import { ThanosSnap } from '../transitions/thanos-snap';
-import { DustSimulation } from '../transitions/dust-simulation';
-import { EnergyBurst } from '../transitions/energy-burst';
-import { FloatingParticles } from '../transitions/floating-particles';
-import { InteractiveParticles } from '../transitions/interactive-particles';
-import { ClothReveal } from '../transitions/cloth-reveal';
-import { LensDistortion } from '../transitions/lens-distortion';
-import { PrismRefraction } from '../transitions/prism-refraction';
-import { VolumetricLight } from '../transitions/volumetric-light';
-import { PageBurn } from '../transitions/page-burn';
-import { PixelMelt } from '../transitions/pixel-melt';
-import { AuroraDrift } from '../transitions/aurora-drift';
-import { HolographicGlitch } from '../transitions/holographic-glitch';
-import { MoltenPour } from '../transitions/molten-pour';
-import { BlackHole } from '../transitions/black-hole';
 
 /**
  * Viewing-phase profiles. Mask reveals and content-heavy handoffs benefit from

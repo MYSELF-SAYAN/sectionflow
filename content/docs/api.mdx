@@ -94,7 +94,7 @@ The `timing` field lets a transition control how much scroll is allotted to its 
 Maps string slugs to transition components:
 
 ```ts
-import { transitionRegistry } from '@/library/core/registry-v2';
+import { transitionRegistry } from '@/library/core/registry';
 
 // Use in Section:
 <Section transition="card-stack">...</Section>
@@ -108,7 +108,7 @@ const Component = transitionRegistry['card-stack'];
 Resolves a `TransitionResolver` (string slug or component) to a `TransitionComponent | null`:
 
 ```ts
-import { resolveTransition } from '@/library/core/registry-v2';
+import { resolveTransition } from '@/library/core/registry';
 
 const component = resolveTransition('circular-portal'); // TransitionComponent | null
 const component2 = resolveTransition(CircularPortal);  // TransitionComponent | null

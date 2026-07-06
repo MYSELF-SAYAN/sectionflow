@@ -32,7 +32,7 @@ export default async function TransitionDocsPage(props: { params: Promise<{ slug
   const [sourceCode, sourceHtml, coreFiles, usageCode, usageHtml] = await Promise.all([
     getTransitionSourceCode(transition.slug),
     getTransitionSourceHtml(transition.slug),
-    getCoreFiles(),
+    getCoreFiles(transition.slug),
     Promise.resolve(getUsageCode(transition.slug)),
     getUsageHtml(transition.slug),
   ]);

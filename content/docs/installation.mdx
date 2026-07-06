@@ -33,7 +33,7 @@ components/sectionflow/
 └── core/
     ├── types.ts           ← TransitionProps, LayerHandle, SectionProps
     ├── section-flow.tsx   ← SectionFlow + Section (persistent-layer stage)
-    └── registry-v2.ts     ← Empty slug → component map (add appends entries)
+    └── registry.ts        ← Empty slug → component map (add appends entries)
 ```
 
 The command auto-detects your framework (Next.js, Vite, CRA), project structure (`src/` layout), and installs `framer-motion`.
@@ -50,7 +50,7 @@ Install multiple at once:
 npx sectionflow-cli add card-stack circular-portal wave-reveal
 ```
 
-Each transition is written to `components/sectionflow/transitions-v2/`, and its import + registry entry are appended to `core/registry-v2.ts` automatically — so `<Section transition="card-stack">` resolves out of the box.
+Each transition is written to `components/sectionflow/transitions/`, and its import + registry entry are appended to `core/registry.ts` automatically — so `<Section transition="card-stack">` resolves out of the box.
 
 ### 3. Browse available transitions
 
@@ -83,22 +83,22 @@ npm install framer-motion
 
 ### Step 2 — Create the core files
 
-Create `components/sectionflow/core/types.ts`, `section-flow.tsx`, and `registry-v2.ts`. Copy their contents from the [API Reference](/docs/api) or the Code tab of any transition.
+Create `components/sectionflow/core/types.ts`, `section-flow.tsx`, and `registry.ts`. Copy their contents from the [API Reference](/docs/api) or the Code tab of any transition.
 
 ### Step 3 — Copy a transition
 
 Open any transition's doc page, click **Code**, then copy the file under the `transition` badge. Place it at:
 
 ```
-components/sectionflow/transitions-v2/<slug>.tsx
+components/sectionflow/transitions/<slug>.tsx
 ```
 
 ### Step 4 — Register and use it
 
-Add the import and registry entry to `core/registry-v2.ts`:
+Add the import and registry entry to `core/registry.ts`:
 
 ```ts
-import { CardStack } from '../transitions-v2/card-stack';
+import { CardStack } from '../transitions/card-stack';
 
 export const transitionRegistry: Record<string, TransitionComponent> = {
   'card-stack': CardStack,
@@ -109,7 +109,7 @@ Then use it in your page:
 
 ```tsx
 import { SectionFlow, Section } from '@/components/sectionflow/core/section-flow';
-import { CardStack } from '@/components/sectionflow/transitions-v2/card-stack';
+import { CardStack } from '@/components/sectionflow/transitions/card-stack';
 
 export default function Page() {
   return (
@@ -188,8 +188,8 @@ src/
         ├── core/
         │   ├── types.ts              ← TransitionProps, LayerHandle, SectionProps
         │   ├── section-flow.tsx      ← SectionFlow + Section (persistent-layer stage)
-        │   └── registry-v2.ts        ← Slug → component resolver
-        └── transitions-v2/
+        │   └── registry.ts           ← Slug → component resolver
+        └── transitions/
             ├── card-stack.tsx
             ├── circular-portal.tsx
             └── ...

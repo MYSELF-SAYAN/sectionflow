@@ -382,7 +382,7 @@ function SectionShell({
   children: SectionProps['children'];
   className?: string;
 }) {
-  return <div className={`h-full w-full ${className ?? ''}`}>{children}</div>;
+  return <div className={`h-full w-full pointer-events-auto ${className ?? ''}`}>{children}</div>;
 }
 
 function useViewportSize(ref: React.RefObject<HTMLElement | null>): Viewport {
