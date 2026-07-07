@@ -26,7 +26,7 @@ export default function DocsTemplatesPage() {
 
       <div className="space-y-8">
         {grouped.map((section) => (
-          <section key={section.group} className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+          <section key={section.group} id={section.group.toLowerCase().replace(/\s+/g, '-')} className="rounded-[32px] border border-white/10 bg-white/5 p-6 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-2xl font-semibold text-white">{section.group}</h2>
               <span className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/50">

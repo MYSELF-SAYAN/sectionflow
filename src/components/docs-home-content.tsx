@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Blocks, Code2, Layers3, Sparkles, Zap } from 'lucide-react';
-import { getDocsStats, getFeaturedTransitions, transitionGroups } from '@/lib/transition-docs';
+import { getDocsStats, getFeaturedTransitions } from '@/lib/transition-docs';
+import { transitionGroups } from '@/library/registry';
 
 export function DocsHomeContent() {
   const featured = getFeaturedTransitions();
@@ -13,32 +14,32 @@ export function DocsHomeContent() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-teal-400/30 bg-teal-500/10 px-3 py-1 text-sm text-teal-200">
               <Sparkles className="size-4" />
-              50+ production-ready transitions
+              Next-generation scroll animations
             </div>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Scroll-driven transitions with persistent layers and viewing phases.
+              Fluid scroll transitions. <br className="hidden sm:block" /> Crafted for React.
             </h1>
             <p className="mt-4 text-lg leading-8 text-white/70">
-              SectionFlow uses a persistent-layer architecture — sections mount once, transitions animate handles, and every edge reserves a reading window before animation begins. Every entry ships with a live demo, source code, and an AI prompt.
+              Copy and paste high-performance scroll sequences into your apps. Built on a persistent-layer architecture that guarantees layout stability, accessibility, and buttery-smooth motion.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/docs/installation" className="inline-flex items-center gap-2 rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-500">
                 Get started <ArrowRight className="size-4" />
               </Link>
               <Link href="/docs/templates" className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white">
-                Explore transitions
+                Browse components
               </Link>
             </div>
           </div>
           <div className="w-full max-w-md rounded-[24px] border border-white/10 bg-[#05070c]/80 p-5">
             <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-white/50">
-              <Code2 className="size-4" /> Quick install
+              <Code2 className="size-4" /> Works with your stack
             </div>
             <pre className="mt-4 overflow-x-auto rounded-2xl bg-black/40 p-4 text-sm leading-7 text-emerald-300">
-              <code>{`npm install framer-motion
-# Optional: npm install gsap`}</code>
+              <code>{`npx sectionflow-cli init
+`}</code>
             </pre>
-            <p className="mt-4 text-sm leading-7 text-white/65">Sections mount once as persistent layers. Transitions write motion values into handles — never clone content.</p>
+            <p className="mt-4 text-sm leading-7 text-white/65">No heavy runtimes or layout thrashing. Pure motion values mapped perfectly to your scroll position.</p>
           </div>
         </div>
       </section>
@@ -56,7 +57,7 @@ export function DocsHomeContent() {
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
           <div className="flex items-center gap-2 text-teal-200">
             <Sparkles className="size-5" />
-            <h2 className="text-2xl font-semibold text-white">Featured transitions</h2>
+            <h2 className="text-2xl font-semibold text-white">Start with the best</h2>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {featured.map((transition) => (
@@ -74,14 +75,14 @@ export function DocsHomeContent() {
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
           <div className="flex items-center gap-2 text-teal-200">
             <Layers3 className="size-5" />
-            <h2 className="text-2xl font-semibold text-white">Transition categories</h2>
+            <h2 className="text-2xl font-semibold text-white">Explore by pattern</h2>
           </div>
           <div className="mt-6 grid gap-3">
             {transitionGroups.map((group) => (
-              <div key={group} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/70">
+              <Link key={group} href={`/docs/templates#${group.toLowerCase().replace(/\s+/g, '-')}`} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/70 transition hover:border-teal-400/40 hover:bg-white/5 hover:text-white">
                 <span>{group}</span>
                 <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.3em] text-white/40">Browse</span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -91,16 +92,16 @@ export function DocsHomeContent() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white/70">
-              <Zap className="size-4" /> Persistent layers
+              <Zap className="size-4" /> Architecture
             </div>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">A premium library for modern landing pages and design systems.</h2>
-            <p className="mt-4 text-lg leading-8 text-white/70">Every transition reserves a viewing phase so content stays readable. Per-frame work stays on the compositor — React re-renders only on edge changes.</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">Engineered for speed and readability.</h2>
+            <p className="mt-4 text-lg leading-8 text-white/70">We built SectionFlow to solve the hardest parts of scroll animations. Every transition reserves a safe viewing phase, guaranteeing your content is always readable. Animations run on the compositor, ensuring React only re-renders when absolutely necessary.</p>
           </div>
           <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 text-sm text-white/70">
             <div className="flex items-center gap-2 font-semibold text-white">
-              <Blocks className="size-4" /> Copy-paste friendly
+              <Blocks className="size-4" /> Own your code
             </div>
-            <p className="mt-3 max-w-sm leading-7">Drop in a transition, swap the content, and ship a polished experience without starting from scratch.</p>
+            <p className="mt-3 max-w-sm leading-7">This is not an npm package. Grab the code, customize the easing curves, and integrate it seamlessly into your own design system.</p>
           </div>
         </div>
       </section>

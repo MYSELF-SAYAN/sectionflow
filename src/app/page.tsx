@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick } from 'lucide-react';
-import { transitions, availableTransitions } from '@/library/registry';
+import { transitions, availableTransitions, transitionGroups, getTransitionGroup } from '@/library/registry';
 import { SiteFooter } from '@/components/site-footer';
 import { SectionFlow, Section } from '@/library/core/section-flow';
 import { CardStack } from '@/library/transitions/card-stack';
@@ -21,7 +21,7 @@ export default function Home() {
     <div className="w-full bg-[#0b0b0e] text-[#fbfaf7] antialiased">
       <Nav />
       <Hero />
-      <SectionFlow heightPerSection={100} restHeight={100}>
+      <SectionFlow heightPerSection={150} restHeight={100}>
         <Section transition={CardStack}>
           <FeaturePanel />
         </Section>
@@ -47,6 +47,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 function Nav() {
   return (
@@ -117,7 +118,7 @@ function Hero() {
         transition={{ delay: 0.55, duration: 0.9, ease }}
         className="mt-8 max-w-xl text-center text-lg leading-relaxed text-white/60"
       >
-        Scroll-driven section transitions with persistent layers, viewing phases, and 60 FPS effects. Framer Motion first, GSAP when you need more.
+        Scroll-driven section transitions with persistent layers, viewing phases, and 60 FPS effects. Framer Motion first.
       </motion.p>
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -162,7 +163,7 @@ const features = [
   { icon: Gauge, title: '60 FPS', body: 'Only compositor-friendly properties: transforms, opacity, clip-paths and masks. Per-frame work stays on the GPU.' },
   { icon: Layers, title: 'Persistent layers', body: 'Sections mount once as persistent layers. Transitions animate handles — never clone or re-render content.' },
   { icon: Boxes, title: 'Viewing phase', body: 'Every transition reserves a reading window where sections sit fully static, so animation never competes with readability.' },
-  { icon: Wand2, title: 'Two engines', body: 'Framer Motion by default. GSAP ScrollTrigger for staggered, multi-phase timelines.' },
+  { icon: Wand2, title: 'Instant project setup', body: 'A single CLI command installs, configures, and integrates SectionFlow into your project in seconds.' },
   { icon: Accessibility, title: 'Production ready', body: 'TypeScript, SSR compatible, mobile optimized, and tuned spring physics.' },
   { icon: MousePointerClick, title: 'Velocity-reactive', body: 'Effects that respond to how fast you scroll, with per-transition timing overrides.' },
 ];
@@ -186,17 +187,19 @@ function FeaturePanel() {
 }
 
 function CategoriesPanel() {
-  const categories = [...new Set(transitions.map((t) => t.category))];
   return (
     <Panel className="bg-gradient-to-br from-teal-950 via-slate-900 to-[#07111d] text-white min-h-[300vh]">
       <span className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-white/40">The catalog</span>
-      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">{transitions.length} transitions. Seven families.</h2>
+      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">{transitions.length} transitions. Eight families.</h2>
       <div className="mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-3">
-        {categories.map((c) => (
-          <span key={c} className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/80">
-            {c} · {transitions.filter((t) => t.category === c).length}
-          </span>
-        ))}
+        {transitionGroups.map((group) => {
+          const count = transitions.filter((t) => getTransitionGroup(t) === group).length;
+          return (
+            <Link key={group} href={`/docs/templates#${group.toLowerCase().replace(/\s+/g, '-')}`} className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+              {group} · {count}
+            </Link>
+          );
+        })}
       </div>
       <Link href="/docs/templates" className="mt-12 flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-medium text-black transition-transform hover:scale-105">
         Open the gallery <ArrowRight className="size-4" />
@@ -209,9 +212,9 @@ function EnginePanel() {
   return (
     <Panel className="bg-[#fbfaf7] text-[#191919]">
       <span className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-black/40">Animation architecture</span>
-      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">Framer Motion first.<br />GSAP when it counts.</h2>
+      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">Framer Motion first.<br />Built for continuity.</h2>
       <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-black/60">
-        Springs, motion values and persistent-layer architecture power most transitions. Multi-phase staggered choreography hands off to GSAP ScrollTrigger.
+        Built on springs, motion values, and a persistent-layer architecture. Multi-phase staggered choreography delivers smooth, high-performance transitions with precise control from start to finish.
       </p>
     </Panel>
   );
@@ -221,8 +224,8 @@ function StatsPanel() {
   const stats = [
     [String(transitions.length) + '+', 'transitions in the catalog'],
     ['60', 'frames per second, always'],
-    ['2', 'animation engines, one API'],
-    ['1', 'file to copy per transition'],
+    ['8', 'categories'],
+    ['1', 'click to setup'],
   ];
   return (
     <Panel className="bg-gradient-to-br from-slate-950 via-teal-950 to-emerald-900 text-white">
@@ -260,7 +263,7 @@ function CtaPanel() {
           Get started
         </Link>
       </div>
-      <p className="mt-16 font-mono text-xs uppercase tracking-[0.25em] text-white/50">SectionFlow · MIT · Built with Framer Motion + GSAP</p>
+      <p className="mt-16 font-mono text-xs uppercase tracking-[0.25em] text-white/50">SectionFlow · MIT · Built with Framer Motion </p>
     </Panel>
   );
 }

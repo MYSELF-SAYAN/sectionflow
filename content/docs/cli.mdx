@@ -1,0 +1,88 @@
+---
+title: CLI Reference
+description: Use the SectionFlow CLI to rapidly scaffold projects and add transitions from the command line.
+---
+
+The SectionFlow CLI (`sectionflow-cli`) is the recommended way to add transitions to your project. It automatically sets up the required core files, installs dependencies, and manages your transition registry.
+
+---
+
+## `init`
+
+Initializes SectionFlow in your project by setting up the core architecture and installing necessary dependencies.
+
+```bash
+npx sectionflow-cli init
+```
+
+### What it does
+
+1. **Auto-detects framework**: Identifies whether you are using Next.js (App or Pages router), Vite, or Create React App to determine the optimal file paths.
+2. **Installs dependencies**: Installs `framer-motion` if it's not already in your `package.json`.
+3. **Scaffolds core files**: Creates the foundational `SectionFlow` engine inside your components directory:
+   - `core/types.ts` — Type definitions for transitions and sections.
+   - `core/section-flow.tsx` — The main persistent-layer stage component.
+   - `core/registry.ts` — An empty transition registry that maps slugs to components.
+
+### Usage
+
+Run this command at the root of your project before adding any transitions. You only need to run this once.
+
+---
+
+## `add`
+
+Adds one or more transitions to your project. 
+
+```bash
+npx sectionflow-cli add [transition-slug...]
+```
+
+### Examples
+
+Add a single transition:
+
+```bash
+npx sectionflow-cli add card-stack
+```
+
+Add multiple transitions at once by space-separating their slugs:
+
+```bash
+npx sectionflow-cli add card-stack circular-portal wave-reveal
+```
+
+### What it does
+
+1. **Downloads components**: Fetches the source code for the requested transitions and places them in the `components/sectionflow/transitions/` directory.
+2. **Updates registry**: Automatically appends import statements and registers the new components in `core/registry.ts`.
+3. **Installs extra dependencies**: If a specific transition requires an additional package (e.g., `gsap` for certain complex SVGs), the CLI will prompt you to install it.
+
+---
+
+## `list`
+
+Lists all available transitions that you can add to your project.
+
+```bash
+npx sectionflow-cli list
+```
+
+### What it does
+
+Displays a grouped list of all production-ready transitions available in the SectionFlow library. This is useful for browsing transition slugs directly from your terminal without needing to visit the documentation.
+
+Transitions are categorized by pattern (e.g., *Overlays*, *Reveals*, *Transforms*) making it easy to find what you need.
+
+---
+
+## Package Manager Support
+
+The CLI can be invoked using your preferred package manager. It supports `npm`, `pnpm`, `yarn`, and `bun`.
+
+| Manager | Command |
+|---------|---------|
+| npm     | `npx sectionflow-cli <command>` |
+| pnpm    | `pnpm dlx sectionflow-cli <command>` |
+| yarn    | `yarn dlx sectionflow-cli <command>` |
+| bun     | `bunx sectionflow-cli <command>` |

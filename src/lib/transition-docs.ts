@@ -1,22 +1,10 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { cache } from 'react';
-import { transitions, type TransitionMeta } from '@/library/registry';
+import { transitions, transitionGroups, getTransitionGroup, type TransitionMeta } from '@/library/registry';
 import { transitionRegistry } from '@/library/core/registry';
 import { codeToHtml } from 'shiki';
 
-export const transitionGroups = ['Wave', 'SVG', 'Perspective', 'Scroll', 'Grid', 'Morph', 'Parallax', 'Other'] as const;
-
-export function getTransitionGroup(meta: TransitionMeta) {
-  if (meta.group) return meta.group;
-  if (meta.slug.includes('wave')) return 'Wave';
-  if (meta.slug.includes('portal') || meta.slug.includes('spotlight') || meta.slug.includes('ink') || meta.slug.includes('wipe') || meta.slug.includes('gradient') || meta.slug.includes('mask')) return 'SVG';
-  if (meta.slug.includes('flip') || meta.slug.includes('fold') || meta.slug.includes('stack') || meta.slug.includes('cinematic') || meta.slug.includes('depth')) return 'Perspective';
-  if (meta.slug.includes('zoom') || meta.slug.includes('elastic') || meta.slug.includes('parallax') || meta.slug.includes('pin') || meta.slug.includes('scroll') || meta.slug.includes('gsap')) return 'Scroll';
-  if (meta.slug.includes('dot') || meta.slug.includes('grid')) return 'Grid';
-  if (meta.slug.includes('morph') || meta.slug.includes('liquid') || meta.slug.includes('mesh')) return 'Morph';
-  return 'Other';
-}
 
 export function getGroupedTransitions() {
   const grouped = new Map<string, TransitionMeta[]>();
@@ -281,10 +269,11 @@ export function getRelatedTransitions(meta: TransitionMeta) {
 export function getDocsStats() {
   const available = transitions.filter((item) => item.status === 'available').length;
   const v2Count = Object.keys(transitionRegistry).length;
+  const comingSoon = transitions.filter((item) => item.status === 'planned').length;
   return [
     { label: 'Transitions', value: `${transitions.length}+` },
-    { label: 'Available demos', value: `${available}` },
-    { label: 'v2 migrated', value: `${v2Count}` },
-    { label: 'TypeScript', value: 'First-class' },
+    { label: 'Categories', value: `${transitionGroups.length}` },
+    { label: 'Coming Soon', value: `${comingSoon}` },
+    { label: 'Primary Engine', value: 'TypeScript + Framer Motion' },
   ];
 }

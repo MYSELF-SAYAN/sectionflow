@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | SectionFlow',
   },
   description:
-    '50+ production-ready, scroll-driven section transitions for modern React websites. Framer Motion first, GSAP when you need more.',
+    '50+ production-ready, scroll-driven section transitions for modern React websites. Framer Motion first.',
 };
 
 export default function RootLayout({

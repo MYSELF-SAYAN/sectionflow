@@ -8,7 +8,7 @@ description: The v2 persistent-layer API for SectionFlow transitions.
 The root stage component. Groups consecutive `<Section>` children into **transition spans** (pinned viewports) and **flow sections** (native browser scroll).
 
 ```tsx
-import { SectionFlow, Section } from '@/library/core/section-flow';
+import { SectionFlow, Section } from '@/components/sectionflow/core/section-flow';
 ```
 
 | Prop | Type | Default | Description |
@@ -94,7 +94,7 @@ The `timing` field lets a transition control how much scroll is allotted to its 
 Maps string slugs to transition components:
 
 ```ts
-import { transitionRegistry } from '@/library/core/registry';
+import { transitionRegistry } from '@/components/sectionflow/core/registry';
 
 // Use in Section:
 <Section transition="card-stack">...</Section>
@@ -108,7 +108,7 @@ const Component = transitionRegistry['card-stack'];
 Resolves a `TransitionResolver` (string slug or component) to a `TransitionComponent | null`:
 
 ```ts
-import { resolveTransition } from '@/library/core/registry';
+import { resolveTransition } from '@/components/sectionflow/core/registry';
 
 const component = resolveTransition('circular-portal'); // TransitionComponent | null
 const component2 = resolveTransition(CircularPortal);  // TransitionComponent | null

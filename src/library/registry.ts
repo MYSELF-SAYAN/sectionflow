@@ -44,6 +44,19 @@ export interface TransitionMeta {
   prompt?: string;
 }
 
+export const transitionGroups = ['Wave', 'SVG', 'Perspective', 'Scroll', 'Grid', 'Morph', 'Parallax', 'Other'] as const;
+
+export function getTransitionGroup(meta: TransitionMeta) {
+  if (meta.group) return meta.group;
+  if (meta.slug.includes('wave')) return 'Wave';
+  if (meta.slug.includes('portal') || meta.slug.includes('spotlight') || meta.slug.includes('ink') || meta.slug.includes('wipe') || meta.slug.includes('gradient') || meta.slug.includes('mask')) return 'SVG';
+  if (meta.slug.includes('flip') || meta.slug.includes('fold') || meta.slug.includes('stack') || meta.slug.includes('cinematic') || meta.slug.includes('depth')) return 'Perspective';
+  if (meta.slug.includes('zoom') || meta.slug.includes('elastic') || meta.slug.includes('parallax') || meta.slug.includes('pin') || meta.slug.includes('scroll') || meta.slug.includes('gsap')) return 'Scroll';
+  if (meta.slug.includes('dot') || meta.slug.includes('grid')) return 'Grid';
+  if (meta.slug.includes('morph') || meta.slug.includes('liquid') || meta.slug.includes('mesh')) return 'Morph';
+  return 'Other';
+}
+
 export const transitions: TransitionMeta[] = [
   // ── Mask reveal ──────────────────────────────────────────────────────────
   { slug: 'wave-reveal', name: 'Wave Reveal', category: 'Creative', engine: 'framer-motion', description: 'An SVG wave cap rides the incoming section as it sweeps upward.', status: 'available', viewing: 'standard', featured: true, group: 'Wave', tags: ['svg', 'wave', 'overlay'] },
@@ -114,6 +127,17 @@ export const transitions: TransitionMeta[] = [
   { slug: 'holographic-glitch', name: 'Holographic Glitch', category: 'Premium', engine: 'framer-motion', description: 'Scanline corruption, RGB channel splits, and chromatic aberration tear the outgoing section apart like a failing hologram — leaving the next section fully intact.', status: 'available', viewing: 'standard', group: 'Other', tags: ['glitch', 'chromatic', 'scanlines'] },
   { slug: 'molten-pour', name: 'Molten Pour', category: 'Creative', engine: 'framer-motion', description: 'Viscous molten metal pours down from the top of the viewport in thick rivulets, cooling and solidifying to reveal the incoming section cast in a metallic sheen.', status: 'available', viewing: 'standard', group: 'Morph', tags: ['liquid', 'metal', 'pour'] },
   { slug: 'black-hole', name: 'Black Hole', category: 'Premium', engine: 'framer-motion', description: 'A gravitational singularity forms at viewport centre, pulling every pixel of the outgoing section into a vortex before the incoming scene explodes outward from the same point.', status: 'available', viewing: 'long', group: 'Other', tags: ['vortex', 'gravity'] },
+  { slug: 'time-freeze', name: 'Time Freeze', category: '3D', engine: 'framer-motion', description: 'The outgoing page freezes into hundreds of floating fragments while the camera moves through them, revealing the next page behind.', status: 'planned', viewing: 'standard', group: 'Perspective', tags: ['freeze', 'fragments', 'camera'] },
+  { slug: 'reality-tear', name: 'Reality Tear', category: 'Split & Fragment', engine: 'framer-motion', description: 'A jagged tear appears in the center, ripping the page apart like fabric. The next page exists underneath and stretches into view.', status: 'planned', viewing: 'standard', group: 'SVG', tags: ['tear', 'fabric', 'rip'] },
+  { slug: 'liquid-refraction', name: 'Liquid Refraction', category: 'Creative', engine: 'framer-motion', description: 'The screen becomes liquid glass. Ripples distort the content before it melts into the incoming page.', status: 'planned', viewing: 'standard', group: 'SVG', tags: ['liquid', 'glass', 'refraction'] },
+  { slug: 'origami-fold', name: 'Origami Fold', category: '3D', engine: 'framer-motion', description: 'The page folds into intricate paper structures, then unfolds into an entirely different layout.', status: 'planned', viewing: 'standard', group: 'Perspective', tags: ['origami', 'fold', 'paper'] },
+  { slug: 'dimensional-slice', name: 'Dimensional Slice', category: '3D', engine: 'framer-motion', description: 'Invisible planes slice the page into thick 3D slabs that slide independently, exposing the next section between them.', status: 'planned', viewing: 'standard', group: 'Perspective', tags: ['slice', '3d', 'slabs'] },
+  { slug: 'gravity-flip', name: 'Gravity Flip', category: 'Creative', engine: 'framer-motion', description: 'The world\'s gravity rotates 90° or 180°. All UI elements fall toward the new direction and settle into the next layout.', status: 'planned', viewing: 'standard', group: 'Other', tags: ['gravity', 'physics', 'flip'] },
+  { slug: 'smoke-dissolve', name: 'Smoke Dissolve', category: 'Particles', engine: 'framer-motion', description: 'The page evaporates into volumetric smoke that drifts away while the new page condenses from the smoke.', status: 'planned', viewing: 'standard', group: 'Other', tags: ['smoke', 'evaporate', 'volumetric'] },
+  { slug: 'page-curl', name: 'Page Curl', category: '3D', engine: 'framer-motion', description: 'A realistic page curl begins from any corner, with thickness, shadows, and bending, revealing the content beneath.', status: 'planned', viewing: 'standard', group: 'Perspective', tags: ['curl', 'page', 'bend'] },
+  { slug: 'mirror-reflection', name: 'Mirror Reflection', category: 'Creative', engine: 'framer-motion', description: 'The screen becomes a mirror. The reflection starts behaving differently, then the reflected world replaces reality.', status: 'planned', viewing: 'standard', group: 'Other', tags: ['mirror', 'reflection'] },
+  { slug: 'elastic-stretch', name: 'Elastic Stretch', category: 'Creative', engine: 'framer-motion', description: 'The page behaves like rubber—stretching, wobbling, snapping, and rebounding into the next section.', status: 'planned', viewing: 'standard', group: 'Morph', tags: ['elastic', 'stretch', 'rubber'] },
+  { slug: 'domino-collapse', name: 'Domino Collapse', category: '3D', engine: 'framer-motion', description: 'The page is divided into vertical panels that topple one after another like dominoes, revealing the next page.', status: 'planned', viewing: 'standard', group: 'Perspective', tags: ['domino', 'panels', 'collapse'] },
 ];
 
 export const availableTransitions = transitions.filter(
