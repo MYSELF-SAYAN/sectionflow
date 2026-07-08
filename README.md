@@ -1,583 +1,301 @@
 <div align="center">
 
-# SectionFlow
+# SectionFlow<span style="color: #0cdfa9;">.</span>
 
-**52 production-ready, scroll-driven section transitions for modern React websites.**
+**Cinematic, scroll-driven section transitions for modern web applications.**
 
-Powered by Framer Motion.
+[![npm version](https://img.shields.io/npm/v/sectionflow?style=flat-square)](https://npmjs.com/package/sectionflow)
+[![License](https://img.shields.io/npm/l/sectionflow?style=flat-square)](https://github.com/your-org/sectionflow/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/npm/dt/sectionflow?style=flat-square)](https://npmjs.com/package/sectionflow)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red?style=flat-square)](https://github.com/your-org/sectionflow)
 
-[Browse the Gallery](http://localhost:3000/docs/templates) · [Read the Docs](http://localhost:3000/docs) · [Live Demos](http://localhost:3000/demo/wave-reveal)
+SectionFlow provides a curated library of drop-in, highly optimized transition components built on **Framer Motion**. Create stunning, buttery-smooth scroll experiences in minutes without writing complex intersection observers or managing brittle timelines.
+
+[**Documentation**](#) · [**Live Demo**](#) · [**Examples**](#) · [**npm**](https://npmjs.com/package/sectionflow) · [**GitHub**](https://github.com/your-org/sectionflow)
 
 </div>
 
 ---
 
-## What is SectionFlow?
+## 🎬 See it in Action
 
-SectionFlow is a curated library of **scroll-driven section transition components** built for Next.js and React. Every transition is a single self-contained `.tsx` file with a consistent two-prop API (`first` / `second`). Drop one between any two sections on your page and the transition fires as the user scrolls — no JavaScript event listeners, no scroll handlers, no layout shifts.
+<div align="center">
+  <img src="https://via.placeholder.com/800x450.png?text=SectionFlow+Cinematic+Demo" alt="SectionFlow Demo" width="100%" style="border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.1);" />
+</div>
 
-The library ships **52 available transitions** across 7 motion families, with **12 more in active development**.
-
----
-
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Core Architecture](#core-architecture)
-- [Transition API](#transition-api)
-- [Transition Catalog](#transition-catalog)
-- [Usage Examples](#usage-examples)
-- [Customisation](#customisation)
-- [Adding New Transitions](#adding-new-transitions)
-- [Tech Stack](#tech-stack)
-- [Development](#development)
-- [License](#license)
+> **What you're seeing:** A seamless, scroll-driven transition between two distinct page sections. SectionFlow orchestrates the timing, physics, and rendering automatically—no JavaScript scroll listeners required.
 
 ---
 
-## Quick Start
+## 💡 Why SectionFlow?
+
+Building complex, scroll-driven animations between website sections is traditionally painful.
+
+**The Old Way:**
+- ❌ Rigid layouts that break easily
+- ❌ Complex, hard-to-maintain animation timelines
+- ❌ Endless boilerplate code
+- ❌ Poor scalability and jittery scroll performance
+- ❌ Duplicate sections and messy state management
+
+**The SectionFlow Way:**
+- ✅ **Clean Composition:** Wrap your sections in `<SectionFlow>`, add a `<Section>`, and specify the outgoing transition.
+- ✅ **Flawless performance:** Built entirely on Framer Motion's optimized rendering pipeline.
+- ✅ **Zero boilerplate:** No intersection observers or event listeners to manage.
+- ✅ **No Duplicate Renders:** Sections are rendered exactly once. The engine choreographs them seamlessly without cloning.
+
+---
+
+## ✨ What's New
+
+We've completely overhauled SectionFlow to provide the best developer experience possible.
+
+### 🆕 Open Source
+SectionFlow is now completely open source! We believe in building together and welcome community contributions to make scroll-driven storytelling accessible to everyone.
+
+### 🏗 Completely Redesigned Architecture
+The internals have been rebuilt from the ground up. The new architecture emphasizes maintainability and predictability, ensuring your transitions work flawlessly as your application scales.
+
+### 🔄 No More Duplicate Sections
+Say goodbye to maintaining duplicated components just for animation states. Sections are now completely reusable and independent. Freely experiment with any combination of components without altering your core application logic.
+
+### ⚡ Major Performance Improvements
+We've obsessed over the details:
+- Fewer re-renders
+- Optimized rendering pipeline
+- Smoother scrolling with spring physics
+- Lightweight runtime
+- Improved animation lifecycle management
+
+### 🎬 Framer Motion First
+SectionFlow is intentionally coupled with **Framer Motion**. By focusing on a single, industry-leading animation library, we ensure:
+- Unmatched simplicity and consistency
+- A dramatically smaller API surface
+- Easier long-term maintenance
+- The best possible developer experience
+
+### 🚀 CLI for Any Framework
+Bootstrap SectionFlow into your preferred React framework with a single command. The CLI automatically configures your environment and scaffolds the components you need.
 
 ```bash
-# Clone and install
-git clone <repo-url>
-cd sectionflow
-npm install
-
-# Start the dev server
-npm run dev
+npx sectionflow-cli init
+npx sectionflow-cli add wave-reveal
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the landing page.  
-Open [http://localhost:3000/docs/templates](http://localhost:3000/docs/templates) to browse all transitions.
+### 📚 Cleaner Documentation
+Our documentation has been entirely rewritten. It's now incredibly beginner-friendly while remaining a comprehensive resource for advanced use cases and custom transition authoring.
+
+### 🧩 Extensible Architecture
+Don't see the exact effect you need? SectionFlow's core engine makes it trivial to build, share, and publish your own custom transitions.
 
 ---
 
-## Project Structure
+## 💎 Features
 
-```
-sectionflow/
-├── src/
-│   ├── app/                        # Next.js App Router pages
-│   │   ├── layout.tsx              # Root layout — includes SiteFooter
-│   │   ├── page.tsx                # Landing page
-│   │   ├── demo/[slug]/            # Full-screen demo for each transition
-│   │   ├── docs/                   # Documentation area
-│   │   │   ├── layout.tsx          # Docs layout (sidebar + main)
-│   │   │   ├── templates/          # Transition gallery page
-│   │   │   └── transitions/[slug]/ # Per-transition doc page
-│   │   └── api/search/             # Fumadocs search endpoint
-│   │
-│   ├── components/                 # Shared UI components
-│   │   ├── docs-shell.tsx          # Docs layout wrapper with sidebar
-│   │   ├── docs-sidebar.tsx        # Sidebar with search + grouped nav
-│   │   ├── docs-home-content.tsx   # Docs homepage content
-│   │   ├── site-footer.tsx         # Site-wide footer
-│   │   ├── template-demo.tsx       # Transition demo renderer (iframe source)
-│   │   ├── transition-docs-shell.tsx # Per-transition docs page UI
-│   │   └── coming-soon-card.tsx    # Planned transition placeholder card
-│   │
-│   ├── library/                    # 📦 The transition library itself
-│   │   ├── registry.ts             # Master catalog — all transition metadata
-│   │   ├── index.ts                # Barrel export for all transitions
-│   │   ├── core/
-│   │   │   ├── types.ts            # SectionTransitionProps interface
-│   │   │   └── transition-track.tsx # Sticky scroll track + progress context
-│   │   ├── transitions/            # One file per transition component
-│   │   │   ├── wave-reveal.tsx
-│   │   │   ├── circular-portal.tsx
-│   │   │   └── ... (52 total)
-│   │   └── demo/
-│   │       └── demo-section.tsx    # Reusable full-screen section for demos
-│   │
-│   └── lib/
-│       └── transition-docs.ts      # Server helpers (grouping, source loading, Shiki)
-│
-├── content/docs/                   # MDX documentation content (Fumadocs)
-│   ├── index.mdx
-│   ├── installation.mdx
-│   └── api.mdx
-│
-├── public/                         # Static assets
-├── next.config.ts
-├── source.config.ts                # Fumadocs MDX configuration
-└── tailwind.config (via postcss)
+- 🎢 **Scroll-driven transitions:** Cinematic physics tied directly to user scroll.
+- ♻️ **Reusable sections:** Clean component boundaries.
+- 📘 **First-class TypeScript:** Excellent autocomplete and type safety.
+- 🎭 **Powered by Framer Motion:** The gold standard for React animations.
+- ⚡️ **Interactive CLI:** Scaffold components instantly.
+- 🛠 **Custom transitions:** Build your own effects easily.
+- 🚀 **Performance optimized:** Hardware accelerated and buttery smooth.
+- 🌳 **Tree-shakeable:** Only ship the transitions you actually use.
+- 📱 **Responsive by default:** Looks great on mobile and desktop.
+- ♿️ **Accessible:** Respects `prefers-reduced-motion`.
+- 🏭 **Production ready:** Battle-tested in the real world.
+- 🌍 **Fully Open Source:** MIT Licensed.
+
+---
+
+## 📦 Installation
+
+Install the core library using your favorite package manager:
+
+```bash
+npx sectionflow-cli init
+# or
+pnpm dlx sectionflow-cli init
+# or
+yarn dlx sectionflow-cli init
+# or
+bunx sectionflow-cli init
 ```
 
 ---
 
-## Core Architecture
+## 🛠 CLI Quick Start
 
-### The Scroll Track
+The fastest way to get started is using the SectionFlow CLI. It automatically adds the necessary core components and your requested transitions directly into your codebase.
 
-Every Framer Motion transition is built on a shared sticky scroll track:
+```bash
+# Initialize SectionFlow in your project
+npx sectionflow-cli init
+
+# Add a specific transition
+npx sectionflow-cli add cinematic-zoom
+```
+
+*The CLI generates the component files in your project so you have full control over the code.*
+
+---
+
+## ⚡ Quick Start
+
+Wrap your existing sections in `<SectionFlow>` and define their outgoing transitions.
 
 ```tsx
-// src/library/core/transition-track.tsx
-export function TransitionTrack({ children, height = 300, className }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end end'],
-  });
-  // Spring-smoothed 0 → 1 progress value
-  const smooth = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 28,
-    mass: 0.4,
-  });
-
-  return (
-    <div ref={ref} style={{ height: `${height}vh` }} className="relative w-full">
-      {/* Sticky viewport — stays pinned while user scrolls through height */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
-        <ProgressContext.Provider value={smooth}>
-          {children}
-        </ProgressContext.Provider>
-      </div>
-    </div>
-  );
-}
-```
-
-**How it works:**
-
-1. `TransitionTrack` renders a `height`-vh-tall scrollable region
-2. The inner `sticky` div is pinned to the top of the viewport for the entire scroll distance
-3. `useScroll` maps that distance to a `0 → 1` progress value
-4. `useSpring` smooths it, removing jitter and adding cinematic feel
-5. The progress value is shared via React context — every child animation reads from `useTrackProgress()`
-
-### The Dead Zone
-
-Every transition reserves the **first 30% of scroll progress** as a content-reading zone. No animation fires until `p > 0.30`. This gives users time to read section content before the transition begins.
-
-```tsx
-// Bad — starts immediately on enter
-const y = useTransform(p, [0.05, 0.85], ['100%', '0%']);
-
-// Good — 30% dead zone before animation
-const y = useTransform(p, [0.30, 0.95], ['100%', '0%']);
-```
-
----
-
-## Transition API
-
-All transitions share the same `SectionTransitionProps` interface:
-
-```ts
-interface SectionTransitionProps {
-  /** The outgoing section — fills the screen when the track starts. */
-  first: ReactNode;
-
-  /** The incoming section — fills the screen when the track ends. */
-  second: ReactNode;
-
-  /** Scroll track height in vh. Longer = slower transition. @default 300 */
-  height?: number;
-
-  className?: string;
-}
-```
-
-Some transitions extend this with additional props (e.g. `WaveReveal` accepts `waveClassName`, `ElasticCurtain` accepts `capClassName`).
-
----
-
-## Transition Catalog
-
-### ✅ Available (52)
-
-#### Creative & SVG
-| Name | Slug | Engine |
-|------|------|--------|
-| Wave Reveal | `wave-reveal` | Framer Motion |
-| Circular Portal | `circular-portal` | Framer Motion |
-| Spotlight Reveal | `spotlight-reveal` | Framer Motion |
-| Ink Spread | `ink-spread` | Framer Motion |
-| Dynamic Mask Reveal | `diagonal-wipe` | Framer Motion |
-| Gradient Burn | `gradient-burn` | Framer Motion |
-| Liquid Morph | `liquid-morph` | Framer Motion |
-| Mesh Gradient Morph | `mesh-gradient-morph` | Framer Motion |
-| Glass Distortion | `glass-distortion` | Framer Motion |
-| Ripple Reveal | `ripple-reveal` | Framer Motion |
-
-#### Split & Fragment
-| Name | Slug | Engine |
-|------|------|--------|
-| Vertical Split | `vertical-split` | Framer Motion |
-| Curtain Split | `curtain-split` | Framer Motion |
-| Diagonal Split | `diagonal-split` | Framer Motion |
-| Blinds Reveal | `blinds-reveal` | Framer Motion |
-| Dot Matrix Reveal | `dot-matrix` | Framer Motion |
-| Paper Tear | `paper-tear` | Framer Motion |
-| Shatter Transition | `shatter` | Framer Motion |
-| Infinite Grid | `infinite-grid` | Framer Motion |
-
-#### 3D & Perspective
-| Name | Slug | Engine |
-|------|------|--------|
-| Perspective Flip | `perspective-flip` | Framer Motion |
-| Fold Reveal | `fold-reveal` | Framer Motion |
-| Card Stack | `card-stack` | Framer Motion |
-| Cinematic Zoom | `cinematic-zoom` | Framer Motion |
-| Layered Depth Shift | `depth-layers` | Framer Motion |
-| Hero Morph | `hero-morph` | Framer Motion |
-| Infinite Tunnel | `infinite-tunnel` | Framer Motion |
-| Spatial Warp | `spatial-warp` | Framer Motion |
-| Dynamic Portal | `dynamic-portal` | Framer Motion |
-| Camera Flythrough | `camera-flythrough` | Framer Motion |
-
-#### Scroll Physics
-| Name | Slug | Engine |
-|------|------|--------|
-| Zoom Scroll | `zoom-fade` | Framer Motion |
-| Elastic Curtain | `elastic-curtain` | Framer Motion |
-| Parallax Section Shift | `parallax-shift` | Framer Motion |
-| Section Pin Reveal | `pin-reveal` | Framer Motion |
-| Scroll Warp | `scroll-warp` | Framer Motion |
-| Progressive Morph | `progressive-morph` | Framer Motion |
-| Direction-Based Reveal | `direction-reveal` | Framer Motion |
-| Multi-Layer Scroll | `multi-layer-scroll` | Framer Motion |
-
-#### Particles
-| Name | Slug | Engine |
-|------|------|--------|
-| Particle Dissolve | `particle-dissolve` | Framer Motion |
-| Floating Particle Flow | `floating-particles` | Framer Motion |
-| Particle Explosion | `particle-explosion` | Framer Motion |
-| Particle Assembly | `particle-assembly` | Framer Motion |
-| Orbiting Particle Reveal | `orbiting-particles` | Framer Motion |
-| Dust Simulation | `dust-simulation` | Framer Motion |
-| Energy Burst | `energy-burst` | Framer Motion |
-| Interactive Particles | `interactive-particles` | Framer Motion |
-
-#### Premium
-| Name | Slug | Engine |
-|------|------|--------|
-| Cloth Simulation Reveal | `cloth-reveal` | Framer Motion |
-| Lens Distortion | `lens-distortion` | Framer Motion |
-| SVG Shape Morph | `svg-shape-morph` | Framer Motion |
-| Prism Refraction | `prism-refraction` | Framer Motion |
-| Volumetric Light Reveal | `volumetric-light` | Framer Motion |
-
-
-
----
-
-### 🔜 Coming Soon (12)
-
-| Name | Description |
-|------|-------------|
-| **Aurora Drift** | Iridescent aurora-borealis curtains sweep across the viewport |
-| **Black Hole** | A gravitational singularity pulls the outgoing section into a vortex |
-| **Holographic Glitch** | Scanline corruption and RGB channel splits tear the scene apart |
-| **Molten Pour** | Viscous molten metal pours down to reveal the incoming section |
-| **Starfield Warp** | Hundreds of stars stretch into hyperspace streaks at warp speed |
-| **Pixel Melt** | The page melts column by column in a staggered pixel cascade |
-| **Thunder Crack** | A lightning bolt fractures the screen with a white flash |
-| **Neon Corridor** | Cyberpunk flythrough down a neon-lit 3D corridor of frames |
-| **Smoke Disperse** | Translucent smoke particles billow upward, exposing the next scene |
-| **Crystal Shatter** | Hundreds of crystalline shards with refraction highlights scatter |
-| **Magnetic Pull** | Sections behave as polar magnets — repel and snap with elastic physics |
-| **Page Burn** | Fire consumes the outgoing section in an organic irregular frontier |
-
----
-
-## Usage Examples
-
-### Basic usage
-
-```tsx
-import { WaveReveal } from '@/library/transitions/wave-reveal';
+import { SectionFlow, Section } from '@/components/sectionflow/core/section-flow';
+import { CinematicZoom } from '@/components/sectionflow/transitions/cinematic-zoom';
+import { WaveReveal } from '@/components/sectionflow/transitions/wave-reveal';
+import { Hero, Features, Footer } from '@/components/sections';
 
 export default function Page() {
   return (
-    <main>
-      <HeroSection />
-
-      <WaveReveal
-        first={
-          <section className="h-full w-full bg-zinc-950 flex items-center justify-center">
-            <h2 className="text-white text-5xl font-bold">Section One</h2>
-          </section>
-        }
-        second={
-          <section className="h-full w-full bg-zinc-900 flex items-center justify-center">
-            <h2 className="text-white text-5xl font-bold">Section Two</h2>
-          </section>
-        }
-      />
-
-      <FooterSection />
-    </main>
+    <SectionFlow>
+      <Section transition={CinematicZoom}>
+        <Hero />
+      </Section>
+      
+      <Section transition={WaveReveal}>
+        <Features />
+      </Section>
+      
+      <Section>
+        <Footer />
+      </Section>
+    </SectionFlow>
   );
 }
 ```
 
-### Controlling transition speed
+---
 
-The `height` prop controls how many viewport-heights of scroll the transition takes. Higher values = slower, more cinematic transitions.
+## 🎨 Built-in Transitions
 
-```tsx
-// Fast (default)
-<CinematicZoom height={300} first={...} second={...} />
+SectionFlow comes with dozens of beautifully crafted transitions out of the box.
 
-// Slow and deliberate
-<CinematicZoom height={500} first={...} second={...} />
+| Transition | Preview |
+| :--- | :--- |
+| **Wave Reveal** | <img src="https://via.placeholder.com/300x168.png?text=Wave+Reveal" alt="Wave Reveal" width="300" /> |
+| **Cinematic Zoom** | <img src="https://via.placeholder.com/300x168.png?text=Cinematic+Zoom" alt="Cinematic Zoom" width="300" /> |
+| **Perspective Flip** | <img src="https://via.placeholder.com/300x168.png?text=Perspective+Flip" alt="Perspective Flip" width="300" /> |
+| **Liquid Morph** | <img src="https://via.placeholder.com/300x168.png?text=Liquid+Morph" alt="Liquid Morph" width="300" /> |
+
+*[View the full gallery in our documentation.](#)*
+
+---
+
+## 🏗 Project Architecture
+
+SectionFlow uses a modular, layered architecture to keep things clean and performant.
+
+```mermaid
+graph TD
+    A[React Application] -->|Uses| B(SectionFlow Transitions)
+    B -->|Extends| C{Transition Engine}
+    C -->|Powered by| D[Framer Motion]
+    C -->|Calculates| E[Scroll Progress & Physics]
 ```
 
-### Chaining multiple transitions
+- **React Application:** Your beautiful frontend code.
+- **SectionFlow Transitions:** The drop-in components (e.g., `WaveReveal`, `CinematicZoom`).
+- **Transition Engine:** The core hooks and context that manage scroll tracking, dead zones, and spring physics.
+- **Framer Motion:** The underlying animation library handling the actual DOM updates efficiently.
 
-```tsx
-<main>
-  <Section1 />
-  <WaveReveal first={<Section1 />} second={<Section2 />} />
-  <CardStack first={<Section2 />} second={<Section3 />} />
-  <ParallaxShift first={<Section3 />} second={<Section4 />} />
-  <Section4 />
-</main>
-```
+---
 
-> **Note:** When chaining, each section content is rendered twice — once as `second` in the previous transition and once as `first` in the next. This is intentional and correct; the transitions are purely visual overlays driven by scroll.
+## 📂 Folder Structure
 
+When you initialize SectionFlow via the CLI, it creates a clean and predictable structure in your project:
 
-
-### Custom wave colour
-
-Some transitions expose additional style props:
-
-```tsx
-import { WaveReveal } from '@/library/transitions/wave-reveal';
-
-<WaveReveal
-  waveClassName="text-white"  // matches second section bg
-  first={<DarkHero />}
-  second={<WhiteFeatures />}
-/>
+```text
+src/
+└── components/
+    └── sectionflow/
+        ├── core/
+        │   ├── section-flow.tsx      # The core engine and composition components
+        │   ├── registry.ts           # Transition resolver
+        │   └── types.ts              # Shared TypeScript definitions
+        └── transitions/
+            ├── wave-reveal.tsx       # Generated transition component
+            └── cinematic-zoom.tsx    # Generated transition component
 ```
 
 ---
 
-## Customisation
+## 🏎 Performance Philosophy
 
-### Adjusting the dead zone
+Scroll animations can quickly ruin a website's feel if not handled correctly. SectionFlow is built with performance as a first principle:
 
-The dead zone (30% of scroll before animation begins) is hardcoded per transition. To change it, edit the `useTransform` keyframe start points in any transition file:
-
-```tsx
-// Default — 30% dead zone
-const y = useTransform(p, [0.30, 0.95], ['100%', '0%']);
-
-// Shorter dead zone — animation starts earlier
-const y = useTransform(p, [0.15, 0.90], ['100%', '0%']);
-
-// Longer dead zone — more reading time
-const y = useTransform(p, [0.45, 0.95], ['100%', '0%']);
-```
-
-### Modifying spring physics
-
-Edit the spring config in `src/library/core/transition-track.tsx`:
-
-```tsx
-const smooth = useSpring(scrollYProgress, {
-  stiffness: 90,   // higher = snappier
-  damping: 28,     // higher = less oscillation
-  mass: 0.4,       // higher = more inertia
-  restDelta: 0.0001,
-});
-```
-
-### Overriding animation easing
-
-Each transition uses `useTransform` keyframes. Swap any range to adjust pacing:
-
-```tsx
-// Linear
-const y = useTransform(p, [0.30, 0.95], ['100%', '0%']);
-
-// Ease in the middle using extra keyframes
-const y = useTransform(
-  p,
-  [0.30, 0.50, 0.80, 0.95],
-  ['100%', '60%', '10%', '0%']
-);
-```
+- **Lazy Rendering:** Content is only animated when it enters the viewport.
+- **Optimized Updates:** We bypass React state for scroll values, using Framer Motion's `useScroll` and `useSpring` to update the DOM directly.
+- **Hardware Acceleration:** All transforms and opacity changes are GPU-accelerated.
+- **Smooth Scrolling:** Built-in spring physics ensure transitions feel buttery smooth, regardless of how fast the user scrolls.
 
 ---
 
-## Adding New Transitions
+## 🌟 Examples
 
-### 1. Create the component file
+See how SectionFlow is being used in the wild:
 
-```bash
-# Convention: src/library/transitions/{slug}.tsx
-touch src/library/transitions/my-transition.tsx
-```
-
-Follow this template:
-
-```tsx
-'use client';
-
-import { motion, useTransform } from 'framer-motion';
-import { TransitionTrack, useTrackProgress } from '../core/transition-track';
-import type { SectionTransitionProps } from '../core/types';
-
-function Inner({ first, second }: Pick<SectionTransitionProps, 'first' | 'second'>) {
-  const p = useTrackProgress(); // Spring-smoothed 0→1 progress
-
-  // ✅ Dead zone: nothing animates until p > 0.30
-  const y = useTransform(p, [0.30, 0.95], ['100%', '0%']);
-  const dim = useTransform(p, [0.30, 0.90], [1, 0]);
-
-  return (
-    <>
-      <motion.div style={{ opacity: dim }} className="absolute inset-0">
-        {first}
-      </motion.div>
-      <motion.div style={{ y }} className="absolute inset-0">
-        {second}
-      </motion.div>
-    </>
-  );
-}
-
-export function MyTransition({ first, second, height, className }: SectionTransitionProps) {
-  return (
-    <TransitionTrack height={height} className={className}>
-      <Inner first={first} second={second} />
-    </TransitionTrack>
-  );
-}
-```
-
-### 2. Register it
-
-Add an entry to `src/library/registry.ts`:
-
-```ts
-{
-  slug: 'my-transition',
-  name: 'My Transition',
-  category: 'Creative',        // one of the TransitionCategory values
-  engine: 'framer-motion',
-  description: 'One sentence describing the visual effect.',
-  status: 'available',          // 'available' | 'planned'
-  group: 'SVG',                 // optional — controls gallery grouping
-  tags: ['my', 'tags'],
-}
-```
-
-### 3. Export from the barrel
-
-Add to `src/library/index.ts`:
-
-```ts
-export { MyTransition } from './transitions/my-transition';
-```
-
-### 4. Register the demo
-
-Add to the `components` map in `src/components/template-demo.tsx`:
-
-```ts
-'my-transition': MyTransition,
-```
-
-That's it. The docs page at `/docs/transitions/my-transition` and the demo at `/demo/my-transition` are fully automatic — they're generated from the registry at build time.
+- **[Creative Portfolio](#)** - Showcasing work with cinematic flair.
+- **[SaaS Landing Page](#)** - Engaging product features with scroll-tied reveals.
+- **[Digital Agency Website](#)** - High-impact, memorable storytelling.
+- **[Editorial Experience](#)** - Immersive, long-form articles.
+- **[Documentation Site](#)** - Subtle, helpful transitions between dense information blocks.
 
 ---
 
-## Tech Stack
+## 📚 Documentation
 
-| Technology | Role |
-|-----------|------|
-| **Next.js 16** | App Router, static generation, server components |
-| **React 19** | UI rendering |
-| **Framer Motion 12** | Primary animation engine — motion values, springs, transforms |
-
-| **Tailwind CSS v4** | Utility styling |
-| **Fumadocs** | MDX docs system — sidebar, search, MDX rendering |
-| **Shiki** | Server-side syntax highlighting for the code tab |
-| **TypeScript 5** | Type safety across the entire codebase |
-| **Geist** | Typography — sans + mono variants |
+For complete API references, advanced usage guides, and instructions on creating your own custom transitions, please visit the **[official documentation](#)**.
 
 ---
 
-## Development
+## 🤝 Contributing
 
-```bash
-# Install dependencies
-npm install
+We love our community! Whether it's adding a new stunning transition, fixing a bug, or improving the docs, your help is welcome.
 
-# Start dev server (Turbopack)
-npm run dev
+1. **Fork** the repository.
+2. **Clone** your fork locally.
+3. **Install** dependencies: `pnpm install`
+4. **Run** the development server: `pnpm dev`
+5. **Submit** a Pull Request!
 
-# Production build
-npm run build
-
-# Start production server
-npm start
-```
-
-### Key commands
-
-```bash
-# Check TypeScript
-npx tsc --noEmit
-
-# Lint
-npx next lint
-
-# Add a new transition (creates the file + reminds you to register)
-# (manual — see Adding New Transitions above)
-```
-
-### Environment
-
-No environment variables are required. The project is fully static with no external API calls.
-
-### File naming conventions
-
-| Pattern | Example |
-|---------|---------|
-| Transition slug | `kebab-case` — `wave-reveal` |
-| Component export | `PascalCase` — `WaveReveal` |
-| Source file | `{slug}.tsx` — `wave-reveal.tsx` |
-| CSS class prefix | `sf-` — `sf-cloth-strip`, `sf-tunnel-frame` |
-
-The `sf-` prefix on DOM class names prevents collisions when transitions are used inside existing projects.
+*Have a cool custom transition? Submit it! We are always looking to expand the built-in library.*
 
 ---
 
-## Docs System
+## 🗺 Roadmap
 
-The documentation site is built with [Fumadocs](https://fumadocs.vercel.app). MDX files live in `content/docs/`.
-
-- `/docs` → Home (stats, quick links)
-- `/docs/installation` → Setup guide
-- `/docs/api` → API reference
-- `/docs/templates` → Full transition gallery, grouped by motion family
-- `/docs/transitions/[slug]` → Per-transition page with:
-  - Live preview iframe
-  - Shiki-highlighted source code
-  - Copy-to-clipboard (source + AI prompt)
-  - Related transitions
-  - AI prompt including full source code + usage example
+- [x] Initial open-source release
+- [x] Rebuilt core architecture
+- [x] CLI generation tool
+- [ ] Add 20+ new built-in transitions
+- [ ] Next.js App Router specific optimizations
+- [ ] Native WebGL transition support
+- [ ] Vue / Svelte support (Exploratory)
 
 ---
 
-## License
+## 💬 Community
 
-MIT — use freely in personal and commercial projects. Attribution appreciated but not required.
+Join the conversation and show off what you've built!
+
+- [**GitHub Discussions**](#) - Ask questions and share ideas.
+- [**Issues**](#) - Report bugs or request features.
+- [**Discord**](#) - Chat with the maintainers and community.
+- [**X / Twitter**](#) - Follow us for updates.
 
 ---
 
-<div align="center">
+## 📄 License
 
-Built with ❤️ using Framer Motion + Next.js
+Distributed under the [MIT License](https://github.com/your-org/sectionflow/blob/main/LICENSE).
 
-</div>
+---
+
+## 🙏 Acknowledgements
+
+A massive thank you to the open-source community, the creators of [Framer Motion](https://www.framer.com/motion/), and everyone who has submitted an issue, PR, or piece of feedback to make SectionFlow better.
