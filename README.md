@@ -1,6 +1,11 @@
 <div align="center">
 
-# SectionFlow<span style="color: #0cdfa9;">.</span>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://res.cloudinary.com/dub6akzeg/image/upload/v1783533138/sectionflow-dark_oitbfb.png">
+    <img alt="SectionFlow Logo" src="https://res.cloudinary.com/dub6akzeg/image/upload/v1783533137/sectionflow-lite_wjiyjx.png" width="400">
+  </picture>
+</p>
 
 **Cinematic, scroll-driven section transitions for modern web applications.**
 
@@ -18,15 +23,6 @@ SectionFlow provides a curated library of drop-in, highly optimized transition c
 
 ---
 
-## 🎬 See it in Action
-
-<div align="center">
-  <img src="https://via.placeholder.com/800x450.png?text=SectionFlow+Cinematic+Demo" alt="SectionFlow Demo" width="100%" style="border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.1);" />
-</div>
-
-> **What you're seeing:** A seamless, scroll-driven transition between two distinct page sections. SectionFlow orchestrates the timing, physics, and rendering automatically—no JavaScript scroll listeners required.
-
----
 
 ## 💡 Why SectionFlow?
 
