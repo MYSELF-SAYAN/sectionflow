@@ -1,8 +1,0 @@
-{
-  "env": {
-    "ANTHROPIC_BASE_URL": "https://router.bynara.id/v1",
-    "ANTHROPIC_API_KEY": "sk-nry-JnMhHHmDhC3GUAAox5g112bnMu0639PSG9YUZOPBvT0",
-    "ANTHROPIC_MODEL": "mimo-v2.5-free",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "mimo-v2.5-free"
-  }
-}
