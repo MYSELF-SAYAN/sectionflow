@@ -4,9 +4,9 @@
 
 **Cinematic, scroll-driven section transitions for modern web applications.**
 
-[![npm version](https://img.shields.io/npm/v/sectionflow?style=flat-square)](https://npmjs.com/package/sectionflow)
-[![License](https://img.shields.io/npm/l/sectionflow?style=flat-square)](https://github.com/your-org/sectionflow/blob/main/LICENSE)
-[![Downloads](https://img.shields.io/npm/dt/sectionflow?style=flat-square)](https://npmjs.com/package/sectionflow)
+[![npm version](https://img.shields.io/npm/v/sectionflow-cli?style=flat-square)](https://npmjs.com/package/sectionflow-cli)
+[![License](https://img.shields.io/npm/l/sectionflow-cli?style=flat-square)](https://github.com/your-org/sectionflow/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/npm/dt/sectionflow-cli?style=flat-square)](https://npmjs.com/package/sectionflow-cli)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red?style=flat-square)](https://github.com/your-org/sectionflow)
 

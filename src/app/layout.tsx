@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
   description:
     '50+ production-ready, scroll-driven section transitions for modern React websites. Framer Motion first.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

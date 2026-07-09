@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { ArrowRight, ChevronDown, ChevronRight, Search, Sparkles } from 'lucide-react';
 import { transitions, type TransitionMeta } from '@/library/registry';
+import Image from 'next/image';
 
 const docsSections = [
   { href: '/docs', label: 'Overview' },
@@ -67,9 +68,7 @@ export function DocsSidebar({
     <aside className="w-full shrink-0 border-b border-teal-400/15 bg-slate-950/85 p-4 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:w-[320px] lg:border-b-0 lg:border-r lg:p-6">
       <div className="flex items-center justify-between rounded-full border border-teal-400/20 bg-teal-500/10 px-3 py-2">
         <Link href="/" className="flex items-center gap-3 text-sm font-semibold tracking-[0.2em] text-white/80 uppercase">
-          <span className="rounded-full border border-teal-400/30 bg-teal-500/10 p-2 text-teal-300">
-            <Sparkles className="size-4" />
-          </span>
+          <Image src="/favicon.png" alt="Logo" width={24} height={24} />
           SectionFlow Docs
         </Link>
 

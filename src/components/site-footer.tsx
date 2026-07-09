@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { transitions } from '@/library/registry';
+import { BsGithub } from 'react-icons/bs';
 
 const LINKS = {
   Library: [
@@ -66,6 +67,24 @@ export function SiteFooter() {
                 <span className="size-1.5 rounded-full bg-cyan-400" />
                 MIT license
               </span>
+            </div>
+
+            {/* GitHub Button */}
+            <div className="mt-8">
+              <a 
+                href="https://github.com/MYSELF-SAYAN/sectionflow"
+                target="_blank"
+                rel="noreferrer"
+                className="group flex w-fit items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/50 py-2 pl-2 pr-5 transition-all duration-300 hover:border-zinc-600 hover:bg-zinc-800 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              >
+                <div className="flex size-8 items-center justify-center rounded-full bg-white text-black transition-transform duration-300 group-hover:scale-110">
+                  <BsGithub size={16} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Open Source</span>
+                  <span className="text-sm font-medium text-zinc-300 transition-colors group-hover:text-white">Star on GitHub</span>
+                </div>
+              </a>
             </div>
           </div>
 

@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick } from 'lucide-react';
+import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick, Star } from 'lucide-react';
 import { transitions, availableTransitions, transitionGroups, getTransitionGroup } from '@/library/registry';
 import { SiteFooter } from '@/components/site-footer';
 import { SectionFlow, Section } from '@/library/core/section-flow';
@@ -13,6 +14,8 @@ import { WaveReveal } from '@/library/transitions/wave-reveal';
 import { VerticalSplit } from '@/library/transitions/vertical-split';
 import { SvgShapeMorph } from '@/library/transitions/svg-shape-morph';
 import { DiagonalSplit } from '@/library/transitions/diagonal-split';
+import { GithubInfo } from 'fumadocs-ui/components/github-info';
+import { BsGithub } from 'react-icons/bs';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -50,6 +53,19 @@ export default function Home() {
 
 
 function Nav() {
+  const [stars, setStars] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/MYSELF-SAYAN/sectionflow')
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.stargazers_count === 'number') {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch((err) => console.error('Failed to fetch github stars', err));
+  }, []);
+
   return (
     <motion.header
       initial={{ y: -24, opacity: 0 }}
@@ -61,8 +77,19 @@ function Nav() {
         SectionFlow<span className="text-teal-400">.</span>
       </Link>
       <nav className="flex items-center gap-6 text-sm text-white/60">
-        <Link href="/docs/templates" className="transition-colors hover:text-white">Templates</Link>
-        <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
+       <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
+        <Link 
+          href="https://github.com/MYSELF-SAYAN/sectionflow" 
+          className="group relative flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+        >
+          <BsGithub size={18} className="text-white/80 transition-colors group-hover:text-white" />
+          <div className="flex items-center gap-1.5 text-sm font-medium">
+             <span className="text-white/90">{stars !== null ? stars : '...'}</span>
+            <Star className="size-3.5 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+           
+          </div>
+        </Link>
+       
         <Link
           href="/docs/templates"
           className="hidden items-center gap-1.5 rounded-full bg-white px-4 py-1.5 font-medium text-black transition-transform hover:scale-105 sm:flex"
