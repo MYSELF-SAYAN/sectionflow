@@ -217,6 +217,7 @@ const features = [
   { icon: Wand2, title: 'Instant project setup', body: 'A single CLI command installs, configures, and integrates SectionFlow into your project in seconds.' },
   { icon: Accessibility, title: 'Production ready', body: 'TypeScript, SSR compatible, mobile optimized, and tuned spring physics.' },
   { icon: MousePointerClick, title: 'Velocity-reactive', body: 'Effects that respond to how fast you scroll, with per-transition timing overrides.' },
+    
 ];
 
 function FeaturePanel() {

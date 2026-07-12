@@ -11,11 +11,13 @@ import {
 } from 'react';
 import {
   motion,
+  motionValue,
   useScroll,
   useSpring,
   useTransform,
   useVelocity,
   useMotionValueEvent,
+  type MotionValue,
   type MotionStyle,
 } from 'framer-motion';
 
@@ -139,21 +141,122 @@ function TransitionSpan({
 
   const edgeCount = Math.max(1, sections.length - 1);
 
-  // ── Per-edge timing table ────────────────────────────────────────────────
+  const viewport = useViewportSize(viewportRef);
+
+  // ── Content-height measurement (tall-section support) ───────────────────
+  // Measure each layer's natural content height so we can allocate extra
+  // scroll budget for sections taller than the viewport.
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  if (contentRefs.current.length !== sections.length) {
+    const old = contentRefs.current;
+    contentRefs.current = sections.map((_, i) => old[i] ?? null);
+  }
+  const [contentHeights, setContentHeights] = useState<number[]>(() =>
+    sections.map(() => 0),
+  );
+  useEffect(() => {
+    const els = contentRefs.current;
+    const measure = () => {
+      setContentHeights((prev) => {
+        const next = sections.map(
+          (_, i) => els[i]?.offsetHeight ?? 0,
+        );
+        if (next.every((h, i) => h === prev[i])) return prev;
+        return next;
+      });
+    };
+    measure();
+    const valid = els.filter(Boolean) as HTMLDivElement[];
+    if (!valid.length) return;
+    const ro = new ResizeObserver(measure);
+    valid.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [sections.length]);
+
+  // ── Per-edge timing table (with overflow budgets for tall sections) ──────
+  //
+  // Each edge now has five zones:
+  //   overflowBefore | rest | duration | postRest | overflowAfter
+  //
+  // overflowBefore  – scroll budget for reading the outgoing section's
+  //                   content beyond the first viewport (only on edge 0;
+  //                   subsequent edges skip it because the section was
+  //                   already scrolled as the incoming layer of the
+  //                   preceding edge).
+  // overflowAfter   – scroll budget for reading the incoming section's
+  //                   content beyond the first viewport.
+  //
+  // For sections ≤100vh both values are 0, collapsing to the original model.
+  //
+  // Budget correction: scrollYProgress maps 0→1 over (spineHeight - viewport),
+  // not spineHeight.  Naive budgets (overflow_px/vh*100) cause content to move
+  // faster than scroll by factor T/(T-100).  We solve the quadratic
+  //   T² - (100+B+S)T + 100B = 0
+  // to find the inflated total height T where each overflow zone's physical
+  // scroll distance exactly equals the overflow in pixels (1:1 ratio).
   const edges = useMemo(() => {
-    const list: { rest: number; duration: number; postRest: number; span: number; start: number }[] = [];
-    let cursor = 0;
+    const vh = viewport.height || 1;
+
+    // Phase 1: collect base (non-overflow) heights and naive overflow budgets.
+    const edgeBase: { rest: number; duration: number; postRest: number }[] = [];
+    const naiveBudgets: { before: number; after: number }[] = [];
+    let B = 0; // total base height in vh
+    let S = 0; // total naive overflow budget in vh
+
     for (let e = 0; e < edgeCount; e++) {
       const t = sections[e]?.transition;
       const rest = t?.timing?.rest ?? restHeight;
       const duration = t?.timing?.duration ?? heightPerSection;
       const postRest = t?.timing?.rest ?? restHeight;
-      const span = rest + duration + postRest;
-      list.push({ rest, duration, postRest, span, start: cursor });
+      edgeBase.push({ rest, duration, postRest });
+      B += rest + duration + postRest;
+
+      const outOverflow = Math.max(0, (contentHeights[e] ?? 0) - vh);
+      const inOverflow = Math.max(0, (contentHeights[e + 1] ?? 0) - vh);
+      const naiveBefore = e === 0 && vh > 0 ? (outOverflow / vh) * 100 : 0;
+      const naiveAfter = vh > 0 ? (inOverflow / vh) * 100 : 0;
+      naiveBudgets.push({ before: naiveBefore, after: naiveAfter });
+      S += naiveBefore + naiveAfter;
+    }
+
+    // Phase 2: solve quadratic for corrected total height.
+    // T² - (100+B+S)T + 100B = 0  →  T = ((100+B+S) + √Δ) / 2
+    const sum = 100 + B + S;
+    const discriminant = sum * sum - 400 * B;
+    const T = S > 0
+      ? (sum + Math.sqrt(Math.max(0, discriminant))) / 2
+      : B; // no overflow → original height
+    const factor = T > 100 ? T / (T - 100) : 1;
+
+    // Phase 3: build edges with corrected budgets.
+    const list: {
+      overflowBefore: number;
+      rest: number;
+      duration: number;
+      postRest: number;
+      overflowAfter: number;
+      span: number;
+      start: number;
+    }[] = [];
+    let cursor = 0;
+    for (let e = 0; e < edgeCount; e++) {
+      const { rest, duration, postRest } = edgeBase[e];
+      const overflowBefore = naiveBudgets[e].before * factor;
+      const overflowAfter = naiveBudgets[e].after * factor;
+      const span = overflowBefore + rest + duration + postRest + overflowAfter;
+      list.push({
+        overflowBefore,
+        rest,
+        duration,
+        postRest,
+        overflowAfter,
+        span,
+        start: cursor,
+      });
       cursor += span;
     }
     return { list, total: cursor };
-  }, [sections, edgeCount, restHeight, heightPerSection]);
+  }, [sections, edgeCount, restHeight, heightPerSection, contentHeights, viewport.height]);
 
   const totalHeight = edges.total;
 
@@ -175,7 +278,119 @@ function TransitionSpan({
     if (dir !== direction) setDirection(dir);
   });
 
-  const viewport = useViewportSize(viewportRef);
+  // ── Content-scroll MotionValues (tall-section support) ──────────────────
+  // For sections taller than the viewport, we translate the inner content
+  // wrapper upward (negative Y) to "scroll" through the section within the
+  // pinned viewport.  Each section has at most one scroll zone in the global
+  // timeline:
+  //   • sections[0]: scrolls during edge 0's overflowBefore zone.
+  //   • sections[k] (k≥1): scrolls during edge (k-1)'s overflowAfter zone.
+  const contentYRef = useRef<MotionValue<number>[]>([]);
+  if (contentYRef.current.length !== sections.length) {
+    const old = contentYRef.current;
+    contentYRef.current = sections.map((_, i) =>
+      i < old.length ? old[i] : motionValue(0),
+    );
+  }
+
+  const scrollZones = useMemo(() => {
+    const vh = viewport.height || 1;
+    return sections.map((_, i) => {
+      const overflow_px = Math.max(0, (contentHeights[i] ?? 0) - vh);
+      if (vh <= 0 || overflow_px <= 0) return null;
+
+      if (i === 0) {
+        // First section scrolls during edge 0's overflowBefore zone.
+        return {
+          startVh: 0,
+          endVh: edges.list[0]?.overflowBefore ?? 0,
+          amount_px: overflow_px,
+        };
+      }
+      // Subsequent sections scroll during the previous edge's overflowAfter.
+      const edgeIdx = i - 1;
+      const edge = edges.list[edgeIdx];
+      if (!edge) return null;
+      const startVh =
+        edge.start +
+        edge.overflowBefore +
+        edge.rest +
+        edge.duration +
+        edge.postRest;
+      return {
+        startVh,
+        endVh: startVh + edge.overflowAfter,
+        amount_px: overflow_px,
+      };
+    });
+  }, [sections, contentHeights, viewport.height, edges]);
+
+  // ── Content-scroll driver (tall-section support) ────────────────────────
+  // Raw scroll listener with ZERO layout thrashing:
+  //  • Spine position is cached and only updated on resize.
+  //  • Scroll handler reads window.scrollY (pre-computed by browser, no layout).
+  //  • Only writes el.style.transform when the value actually changes.
+  //  • Content wrapper has will-change:transform for GPU compositing.
+  useEffect(() => {
+    const spine = spineRef.current;
+    if (!spine || !scrollZones.some((z) => z !== null)) return;
+    const vh = viewport.height;
+    if (vh <= 0) return;
+
+    // Cache geometry — only recompute on resize, NEVER in the scroll handler.
+    let cachedSpineTop = 0;
+    let cachedScrollable = 0;
+    const updateGeometry = () => {
+      const rect = spine.getBoundingClientRect();
+      cachedSpineTop = rect.top + window.scrollY; // absolute doc position
+      cachedScrollable = spine.offsetHeight - vh;
+    };
+    updateGeometry();
+    const ro = new ResizeObserver(updateGeometry);
+    ro.observe(spine);
+
+    // Track last written Y per layer to skip no-op DOM writes.
+    const lastY = new Float64Array(scrollZones.length);
+
+    const total = edges.total;
+
+    const handleScroll = () => {
+      if (cachedScrollable <= 0) return;
+      const p = Math.max(0, Math.min(1, (window.scrollY - cachedSpineTop) / cachedScrollable));
+      const offsetVh = p * total;
+
+      for (let i = 0; i < scrollZones.length; i++) {
+        const zone = scrollZones[i];
+        const el = contentRefs.current[i];
+        if (!el || !zone) continue;
+
+        let y = 0;
+        if (offsetVh <= zone.startVh) {
+          y = 0;
+        } else if (offsetVh >= zone.endVh) {
+          y = -zone.amount_px;
+        } else {
+          const range = zone.endVh - zone.startVh;
+          const t = range > 0 ? (offsetVh - zone.startVh) / range : 0;
+          y = -zone.amount_px * t;
+        }
+
+        // Skip DOM write if value hasn't changed (within 0.5px).
+        if (Math.abs(y - lastY[i]) < 0.5) continue;
+        lastY[i] = y;
+        el.style.transform = `translateY(${y}px)`;
+        // Keep MotionValue in sync for render() copies.
+        contentYRef.current[i]?.set(y);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // set initial position
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      ro.disconnect();
+    };
+  }, [scrollZones, edges.total, viewport.height]);
 
   // ── Style bags ───────────────────────────────────────────────────────────
   // Stable refs that persist across renders. We clear them when the active
@@ -214,12 +429,23 @@ function TransitionSpan({
   const needsCopies = ActiveTransition && (ActiveTransition as TransitionComponent).copies === true;
 
   // Local 0→1 progress across ONLY the animation window of the active edge.
-  const activeEdgeTiming = edges.list[activeEdge] ?? { start: 0, rest: restHeight, duration: heightPerSection, postRest: restHeight };
+  // The animation window starts after overflowBefore + rest.
+  const activeEdgeTiming = edges.list[activeEdge] ?? {
+    overflowBefore: 0,
+    start: 0,
+    rest: restHeight,
+    duration: heightPerSection,
+    postRest: restHeight,
+    overflowAfter: 0,
+  };
   const localProgress = useTransform(progress, (p) => {
     const offsetVh = p * edges.total;
+    const animStart =
+      activeEdgeTiming.start +
+      activeEdgeTiming.overflowBefore +
+      activeEdgeTiming.rest;
     const animLocal =
-      (offsetVh - activeEdgeTiming.start - activeEdgeTiming.rest) /
-      activeEdgeTiming.duration;
+      (offsetVh - animStart) / activeEdgeTiming.duration;
     return animLocal < 0 ? 0 : animLocal > 1 ? 1 : animLocal;
   });
 
@@ -229,9 +455,11 @@ function TransitionSpan({
     ...(needsCopies
       ? {
           render: () => (
-            <SectionShell className={sections[activeEdge].className}>
-              {sections[activeEdge].children}
-            </SectionShell>
+            <motion.div style={{ y: contentYRef.current[activeEdge] }}>
+              <SectionShell className={sections[activeEdge].className}>
+                {sections[activeEdge].children}
+              </SectionShell>
+            </motion.div>
           ),
         }
       : {}),
@@ -242,9 +470,11 @@ function TransitionSpan({
     ...(needsCopies
       ? {
           render: () => (
-            <SectionShell className={sections[activeEdge + 1].className}>
-              {sections[activeEdge + 1].children}
-            </SectionShell>
+            <motion.div style={{ y: contentYRef.current[activeEdge + 1] }}>
+              <SectionShell className={sections[activeEdge + 1].className}>
+                {sections[activeEdge + 1].children}
+              </SectionShell>
+            </motion.div>
           ),
         }
       : {}),
@@ -292,7 +522,14 @@ function TransitionSpan({
               className="absolute inset-0 h-full w-full"
               data-sf-layer={idx}
             >
-              <SectionShell className={s.className}>{s.children}</SectionShell>
+              <div
+                ref={(el) => {
+                  contentRefs.current[idx] = el;
+                }}
+                style={{ willChange: 'transform' }}
+              >
+                <SectionShell className={s.className}>{s.children}</SectionShell>
+              </div>
             </motion.div>
           );
         })}
@@ -382,7 +619,7 @@ function SectionShell({
   children: SectionProps['children'];
   className?: string;
 }) {
-  return <div className={`h-full w-full pointer-events-auto ${className ?? ''}`}>{children}</div>;
+  return <div className={`min-h-screen w-full pointer-events-auto ${className ?? ''}`}>{children}</div>;
 }
 
 function useViewportSize(ref: React.RefObject<HTMLElement | null>): Viewport {
