@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.impeccable
+DESIGN.md
+PRODUCT.md
+IMPECCABLE.md

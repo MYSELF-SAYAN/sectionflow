@@ -19,11 +19,11 @@ export default async function Page(props: {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-[32px] border border-teal-400/20 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.2),transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 sm:p-8">
+      <header className="rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.2),transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 sm:p-8">
         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{page.data.title}</h1>
         <p className="mt-3 max-w-2xl text-lg leading-8 text-white/70">{page.data.description}</p>
       </header>
-      <article className="rounded-[32px] border border-teal-400/20 bg-[#05070c]/70 p-6 sm:p-8 prose prose-invert max-w-none prose-headings:text-white prose-p:text-white/70 prose-strong:text-white prose-code:text-teal-200 prose-pre:bg-black/40 prose-a:text-teal-200 prose-li:text-white/70">
+      <article className="rounded-2xl border border-white/10 bg-[#101014] p-6 sm:p-8 prose prose-invert max-w-none prose-headings:text-white prose-p:text-white/70 prose-strong:text-white prose-code:text-teal-200 prose-pre:bg-black/40 prose-a:text-teal-200 prose-li:text-white/70">
         <MDX components={getMDXComponents()} />
       </article>
     </div>

@@ -263,7 +263,7 @@ export function getTransitionPrompt(meta: TransitionMeta) {
 export function getRelatedTransitions(meta: TransitionMeta) {
   return transitions
     .filter((item) => item.status === 'available' && item.slug !== meta.slug && getTransitionGroup(item) === getTransitionGroup(meta))
-    .slice(0, 4);
+    .slice(0, 5);
 }
 
 export function getDocsStats() {

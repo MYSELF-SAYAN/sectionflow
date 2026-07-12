@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick, Star } from 'lucide-react';
+import { ArrowRight, ArrowDown, Layers, Gauge, Accessibility, Boxes, Wand2, MousePointerClick, Star, Copy, Check } from 'lucide-react';
 import { transitions, availableTransitions, transitionGroups, getTransitionGroup } from '@/library/registry';
 import { SiteFooter } from '@/components/site-footer';
 import { SectionFlow, Section } from '@/library/core/section-flow';
@@ -80,7 +80,7 @@ function Nav() {
        <Link href="/docs" className="transition-colors hover:text-white">Docs</Link>
         <Link 
           href="https://github.com/MYSELF-SAYAN/sectionflow" 
-          className="group relative flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+          className="group relative flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]"
         >
           <BsGithub size={18} className="text-white/80 transition-colors group-hover:text-white" />
           <div className="flex items-center gap-1.5 text-sm font-medium">
@@ -103,6 +103,13 @@ function Nav() {
 
 function Hero() {
   const names = availableTransitions.map((t) => t.name);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText('npx sectionflow-cli init');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6">
       <motion.div
@@ -154,11 +161,28 @@ function Hero() {
         className="mt-10 flex flex-wrap items-center justify-center gap-4"
       >
         <Link href="/docs/templates" className="flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-medium text-black transition-transform hover:scale-105">
-          Browse templates <ArrowRight className="size-4" />
+          Browse Transitions <ArrowRight className="size-4" />
         </Link>
-        <Link href="/docs" className="rounded-full border border-white/15 px-7 py-3.5 font-medium text-white/80 transition-colors hover:bg-white/5 hover:text-white">
+        {/* <Link href="/docs" className="rounded-full border border-white/15 px-7 py-3.5 font-medium text-white/80 transition-colors hover:bg-white/5 hover:text-white">
           Read the docs
-        </Link>
+        </Link> */}
+        <button
+          onClick={handleCopy}
+          className="group flex cursor-pointer items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-7 py-3.5 font-medium text-teal-400 transition-all hover:border-teal-400/50 hover:bg-teal-400/20"
+        >
+          <span className="font-mono text-sm">npx sectionflow-cli init</span>
+          <span className={`transition-opacity text-xs flex items-center gap-1 ${copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+            {copied ? (
+              <>
+                <Check className="size-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="size-3" /> Copy
+              </>
+            )}
+          </span>
+        </button>
       </motion.div>
       <motion.div
         animate={{ y: [0, 10, 0] }}

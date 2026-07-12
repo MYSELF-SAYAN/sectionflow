@@ -9,8 +9,8 @@
 
 :root {
   color-scheme: dark;
-  --bg-canvas: #020617;
-  --bg-elevated: #07111d;
+  --bg-canvas: #0b0b0e;
+  --bg-elevated: #101014;
   --bg-surface: rgba(255, 255, 255, 0.04);
   --bg-soft: rgba(255, 255, 255, 0.03);
   --border-strong: rgba(148, 163, 184, 0.18);
@@ -45,4 +45,20 @@ body {
   to {
     transform: translateX(-50%);
   }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
