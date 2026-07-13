@@ -11,12 +11,12 @@ const LINKS = {
     { label: 'API reference', href: '/docs/api' },
   ],
   Categories: [
-    { label: 'Wave', href: '/docs/templates#wave' },
-    { label: 'SVG', href: '/docs/templates#svg' },
-    { label: 'Perspective', href: '/docs/templates#perspective' },
+    { label: 'Creative', href: '/docs/templates#creative' },
+    { label: 'Split & Fragment', href: '/docs/templates#split-&-fragment' },
+    { label: '3D', href: '/docs/templates#3d' },
     { label: 'Scroll', href: '/docs/templates#scroll' },
-    { label: 'Grid', href: '/docs/templates#grid' },
-    { label: 'Morph', href: '/docs/templates#morph' },
+    { label: 'Particles', href: '/docs/templates#particles' },
+    { label: 'Premium', href: '/docs/templates#premium' },
   ],
   Resources: [
     { label: 'Framer Motion docs', href: 'https://motion.dev', external: true },
