@@ -242,7 +242,7 @@ function CategoriesPanel() {
   return (
     <Panel className="bg-gradient-to-br from-teal-950 via-slate-900 to-[#07111d] text-white min-h-[300vh]">
       <span className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-white/40">The catalog</span>
-      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">{transitions.length} transitions. Eight families.</h2>
+      <h2 className="max-w-3xl text-center text-4xl font-semibold tracking-tighter sm:text-6xl">{transitions.length} transitions. {transitionGroups.length} families.</h2>
       <div className="mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-3">
         {transitionGroups.map((group) => {
           const count = transitions.filter((t) => getTransitionGroup(t) === group).length;
@@ -276,7 +276,7 @@ function StatsPanel() {
   const stats = [
     [String(transitions.length) + '+', 'transitions in the catalog'],
     ['60', 'frames per second, always'],
-    ['8', 'categories'],
+    [String(transitionGroups.length), 'categories'],
     ['1', 'click to setup'],
   ];
   return (
