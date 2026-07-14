@@ -192,7 +192,7 @@ function Hero() {
         <ArrowDown className="size-5" />
       </motion.div>
       <div className="pointer-events-none absolute bottom-0 left-0 w-full overflow-hidden border-t border-white/10 py-4">
-        <div className="flex w-max gap-12 whitespace-nowrap font-mono text-xs uppercase tracking-[0.25em] text-white/30 [animation:marquee_35s_linear_infinite]">
+        <div className="flex w-max gap-12 whitespace-nowrap font-mono text-xs uppercase tracking-[0.25em] text-white/30 [animation:marquee_140s_linear_infinite]">
           {[...names, ...names].map((n, i) => (
             <span key={i}>{n}</span>
           ))}
