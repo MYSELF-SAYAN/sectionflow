@@ -65,8 +65,8 @@ export function DocsSidebar({
     : undefined;
 
   return (
-    <aside className="w-full shrink-0 border-b border-teal-400/15 bg-slate-950/85 p-4 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:w-[320px] lg:border-b-0 lg:border-r lg:p-6">
-      <div className="flex items-center justify-between rounded-full border border-teal-400/20 bg-teal-500/10 px-3 py-2">
+    <aside className="w-full shrink-0 border-b border-teal-400/15 bg-slate-950/85 p-4 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:w-[320px] lg:border-b-0 lg:border-r lg:p-6 lg:flex lg:flex-col">
+      <div className="shrink-0 flex items-center justify-between rounded-full border border-teal-400/20 bg-teal-500/10 px-3 py-2">
         <Link href="/" className="flex items-center gap-3 text-sm font-semibold tracking-[0.2em] text-white/80 uppercase">
           <Image src="/favicon.png" alt="Logo" width={24} height={24} />
           SectionFlow Docs
@@ -74,7 +74,7 @@ export function DocsSidebar({
 
       </div>
 
-      <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-3">
+      <div className="mt-6 shrink-0 rounded-3xl border border-white/10 bg-white/5 p-3">
         <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/60">
           <Search className="size-4" />
           <input
@@ -95,14 +95,14 @@ export function DocsSidebar({
           </div>
         ) : null}
       </div>
-      <div className='lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto'>
+      <div data-lenis-prevent className='lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-2' style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.16) transparent' }}>
         <div className="mt-6 space-y-2">
           {docsSections.map((section) => (
             <SidebarItem key={section.href} href={section.href} label={section.label} active={isActive(pathname, section.href)} />
           ))}
         </div>
 
-        <div className="mt-8  lg:pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.16) transparent' }}>
+        <div className="mt-8">
           <div>
             <button
               type="button"
@@ -167,7 +167,7 @@ export function DocsSidebar({
 
 
       {currentTransition ? (
-        <div className="mt-8 rounded-2xl border border-teal-400/20 bg-teal-500/10 p-3 text-sm text-teal-100">
+        <div className="mt-8 shrink-0 rounded-2xl border border-teal-400/20 bg-teal-500/10 p-3 text-sm text-teal-100">
           <div className="font-semibold">Current transition</div>
           <div className="mt-1 text-teal-100/80">{currentTransition.name}</div>
         </div>

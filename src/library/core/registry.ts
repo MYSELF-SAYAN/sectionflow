@@ -43,6 +43,7 @@ import { PaperTear } from '../transitions/paper-tear';
 import { CrystalShatter } from '../transitions/crystal-shatter';
 import { ThunderCrack } from '../transitions/thunder-crack';
 import { PanelPass } from '../transitions/panel-pass';
+import { RealityTear } from '../transitions/reality-tear';
 // ── 3D / perspective ───────────────────────────────────────────────────────
 import { CardStack } from '../transitions/card-stack';
 import { PerspectiveFlip } from '../transitions/perspective-flip';
@@ -56,11 +57,15 @@ import { DynamicPortal } from '../transitions/dynamic-portal';
 import { CameraFlythrough } from '../transitions/camera-flythrough';
 import { NeonCorridor } from '../transitions/neon-corridor';
 import { StarfieldWarp } from '../transitions/starfield-warp';
+import { DimensionalSlice } from '../transitions/dimensional-slice';
+import { OrigamiFold } from '../transitions/origami-fold';
+import { PageCurl } from '../transitions/page-curl';
 
 // ── Scroll ─────────────────────────────────────────────────────────────────
 import { WaveReveal } from '../transitions/wave-reveal';
 import { ZoomFade } from '../transitions/zoom-fade';
 import { ElasticCurtain } from '../transitions/elastic-curtain';
+import { ElasticStretch } from '../transitions/elastic-stretch';
 import { ParallaxShift } from '../transitions/parallax-shift';
 import { PinReveal } from '../transitions/pin-reveal';
 import { ScrollWarp } from '../transitions/scroll-warp';
@@ -89,6 +94,8 @@ import { AuroraDrift } from '../transitions/aurora-drift';
 import { HolographicGlitch } from '../transitions/holographic-glitch';
 import { MoltenPour } from '../transitions/molten-pour';
 import { BlackHole } from '../transitions/black-hole';
+import { GravityFlip } from '../transitions/gravity-flip';
+import { MirrorReflection } from '../transitions/mirror-reflection';
 
 /**
  * Viewing-phase profiles. Mask reveals and content-heavy handoffs benefit from
@@ -137,6 +144,7 @@ export const transitionRegistry: Record<string, TransitionComponent> = {
   'crystal-shatter': CrystalShatter,
   'thunder-crack': ThunderCrack,
   'panel-pass': PanelPass,
+  'reality-tear': RealityTear,
 
   // 3D / perspective
   'card-stack': CardStack,
@@ -151,11 +159,15 @@ export const transitionRegistry: Record<string, TransitionComponent> = {
   'camera-flythrough': CameraFlythrough,
   'neon-corridor': NeonCorridor,
   'starfield-warp': StarfieldWarp,
+  'dimensional-slice': DimensionalSlice,
+  'origami-fold': OrigamiFold,
+  'page-curl': PageCurl,
 
   // Scroll
   'wave-reveal': WaveReveal,
   'zoom-fade': ZoomFade,
   'elastic-curtain': ElasticCurtain,
+  'elastic-stretch': ElasticStretch,
   'parallax-shift': ParallaxShift,
   'pin-reveal': PinReveal,
   'scroll-warp': ScrollWarp,
@@ -184,6 +196,10 @@ export const transitionRegistry: Record<string, TransitionComponent> = {
   'holographic-glitch': HolographicGlitch,
   'molten-pour': MoltenPour,
   'black-hole': BlackHole,
+
+  // Creative
+  'gravity-flip': GravityFlip,
+  'mirror-reflection': MirrorReflection,
 };
 
 /** Resolve a TransitionResolver (string slug or component) to a component. */

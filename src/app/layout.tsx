@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './globals.css';
 import { Analytics } from "@vercel/analytics/next"
+import { SmoothScroll } from '@/components/smooth-scroll';
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -33,15 +35,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
         <RootProvider>
-          <div className="flex min-h-full flex-1 flex-col">
-            {children}
-            <Analytics/>
-          </div>
+          <SmoothScroll>
+            <div className="flex min-h-full flex-1 flex-col">
+              {children}
+              <Analytics/>
+            </div>
+          </SmoothScroll>
         </RootProvider>
       </body>
     </html>
