@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.svg',
   },
+  verification: {
+    google: 'aJlv5m0r45Zv_SexyuDcdbNz-11YuQHutURMOR7mFv8',
+  },
 };
 
 export default function RootLayout({
@@ -38,12 +41,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
+    
       <body className="flex min-h-full flex-col">
         <RootProvider>
           <SmoothScroll>
             <div className="flex min-h-full flex-1 flex-col">
               {children}
-              <Analytics/>
+              <Analytics />
             </div>
           </SmoothScroll>
         </RootProvider>
