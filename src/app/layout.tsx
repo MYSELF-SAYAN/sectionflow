@@ -4,6 +4,7 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import './globals.css';
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from '@/components/smooth-scroll';
+import { getSiteUrl } from '@/lib/site';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -16,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: 'SectionFlow – React Section Transition Library',
     template: '%s | SectionFlow',
